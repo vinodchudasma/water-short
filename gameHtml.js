@@ -39,23 +39,35 @@ const GAME_HTML = `<!DOCTYPE html>
     body {
       font-family: 'Fredoka', system-ui, sans-serif;
       color: var(--ink);
-      background: radial-gradient(ellipse at 50% 0%, var(--bg1), var(--bg2) 70%);
+      background: radial-gradient(ellipse at 50% -10%, #2e1a64, #0e0926 55%, #050312 100%);
     }
 
     body::before {
       content: "";
       position: fixed;
       inset: 0;
-      background-image: radial-gradient(1.5px 1.5px at 20% 30%, #fff8, transparent), radial-gradient(1px 1px at 70% 20%, #fff6, transparent), radial-gradient(1.5px 1.5px at 40% 80%, #fff5, transparent), radial-gradient(1px 1px at 85% 65%, #fff7, transparent), radial-gradient(1px 1px at 10% 70%, #fff5, transparent);
-      pointer-events: none
+      background: radial-gradient(circle at 18% 22%, rgba(34, 211, 238, 0.09) 0%, transparent 40%),
+                  radial-gradient(circle at 82% 78%, rgba(244, 114, 182, 0.08) 0%, transparent 45%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    #bg-canvas {
+      position: fixed;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 0;
     }
 
     #app {
       position: relative;
+      z-index: 1;
       height: 100%;
       display: flex;
       flex-direction: column;
-      max-width: 520px;
+      max-width: 540px;
       margin: 0 auto;
       padding: 16px 16px 20px
     }
@@ -105,19 +117,38 @@ const GAME_HTML = `<!DOCTYPE html>
     }
 
     #board {
+      position: relative;
       flex: 1;
       min-height: 0;
       display: flex;
       flex-direction: column;
       justify-content: center;
       align-items: center;
-      gap: min(24px, calc(var(--bh)*.22));
+      gap: min(32px, calc(var(--bh)*.28));
       margin-top: 36px;
+    }
+
+    #board::before {
+      content: "";
+      position: absolute;
+      width: min(92vw, 440px);
+      height: min(92vw, 440px);
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(147, 51, 234, 0.18) 0%, rgba(34, 211, 238, 0.07) 50%, transparent 72%);
+      filter: blur(48px);
+      z-index: -1;
+      pointer-events: none;
+      animation: ambientPulse 8s ease-in-out infinite alternate;
+    }
+
+    @keyframes ambientPulse {
+      0% { transform: scale(0.92); opacity: 0.65; }
+      100% { transform: scale(1.12); opacity: 0.95; }
     }
 
     .row {
       display: flex;
-      gap: calc(var(--bw)*.22);
+      gap: calc(var(--bw)*.4);
       justify-content: center
     }
 
@@ -137,8 +168,8 @@ const GAME_HTML = `<!DOCTYPE html>
     .bottle::before {
       content: "";
       position: absolute;
-      left: -7px;
-      right: -7px;
+      left: -4px;
+      right: -4px;
       top: -8px;
       height: 10px;
       border-radius: 6px 6px 4px 4px;
@@ -189,8 +220,8 @@ const GAME_HTML = `<!DOCTYPE html>
 
     .cork {
       position: absolute;
-      left: -7px;
-      right: -7px;
+      left: -4px;
+      right: -4px;
       top: -18px;
       height: 24px;
       z-index: 4;
@@ -427,6 +458,7 @@ const GAME_HTML = `<!DOCTYPE html>
   </style>
 </head>
 <body>
+  <canvas id="bg-canvas"></canvas>
   <div id="app">
     <header>
       <button class="ib" id="rs" aria-label="Restart level">↻</button>
@@ -456,7 +488,12 @@ const GAME_HTML = `<!DOCTYPE html>
     </div>
   </div>
   <script>
-    const COL = ['#ff4d8d', '#ff8a1f', '#ffd23f', '#7ddc1f', '#19c37d', '#22d3ee', '#4f7cff', '#9b5cff', '#ef3b3b', '#9a6240', '#14b8a6', '#e8e4f5'];
+    const COL = [
+      '#ff4d8d', '#ff8a1f', '#ffd23f', '#7ddc1f', '#19c37d', '#22d3ee',
+      '#4f7cff', '#9b5cff', '#ef3b3b', '#9a6240', '#14b8a6', '#f472b6',
+      '#06b6d4', '#e2e8f0', '#8b5cf6', '#f59e0b', '#10b981', '#6366f1',
+      '#ec4899', '#84cc16', '#3b82f6', '#a855f7', '#d97706', '#14532d'
+    ];
     const CAP = 4, $ = s => document.getElementById(s), sleep = ms => new Promise(r => setTimeout(r, ms));
     let L = 1, B = [], cov = [], els = [], sel = null, busy = false, hist = [], undos = 5, adds = 2, sound = true, ac = null;
     try { L = Math.max(1, parseInt(localStorage.getItem('ws_level')) || 1) } catch (e) { }
@@ -575,10 +612,40 @@ const GAME_HTML = `<!DOCTYPE html>
     function toast(t) { const e = $('toast'); e.textContent = t; e.classList.add('on'); clearTimeout(toast.t); toast.t = setTimeout(() => e.classList.remove('on'), 2200) }
 
     function params(l) {
-      const colors = Math.min(3 + Math.floor((l - 1) / 3), 12);
-      return { colors, empty: l < 40 ? 2 : 1, hide: l >= 8 ? Math.min(.7 + (l - 8) * .02, .95) : 0, covers: 0, moves: Math.min(30 + l * 4, 420) };
+      let colors;
+      if (l <= 2) colors = 3;           // Level 1-2: 3 colors (5 bottles) - Tutorial
+      else if (l <= 4) colors = 4;      // Level 3-4: 4 colors (6 bottles) - Easy
+      else if (l <= 9) colors = 5;      // Level 5-9: 5 colors (7 bottles) - Milestone 5
+      else if (l <= 14) colors = 6;     // Level 10-14: 6 colors (8 bottles) - Milestone 10
+      else if (l <= 24) colors = 7;     // Level 15-24: 7 colors (9 bottles)
+      else if (l <= 49) colors = 8;     // Level 25-49: 8 colors (10 bottles) - Milestone 25
+      else if (l <= 99) colors = 9;     // Level 50-99: 9 colors (11 bottles)
+      else if (l <= 199) colors = 10;   // Level 100-199: 10 colors (12 bottles)
+      else if (l <= 399) colors = 11;   // Level 200-399: 11 colors (13 bottles)
+      else if (l < 415) colors = 12;    // Level 400-414: 12 colors (14 bottles)
+      else {
+        // 400 ke baad har level me nahi badhega!
+        // 400 ke baad har 15 levels ke interval (415, 430, 445...) par 1 color badhega
+        // Aur MAX limit 25 bottles hai (23 colors + 2 empty = 25 bottles max), uske baad kabhi nahi badhega!
+        const extra = Math.floor((l - 400) / 15);
+        colors = Math.min(12 + extra, 23); // 23 colors + 2 empty = 25 bottles maximum
+      }
+      const empty = 2; // Hamesha 2 empty bottles taaki game solve ho sake
+      const hide = l < 6 ? 0 : Math.min(0.25 + (Math.min(l, 400) / 400) * 0.55, 0.85);
+      const moves = Math.min(25 + l * 3, 500);
+      return { colors, empty, hide, covers: 0, moves };
     }
-    function label(l) { return l <= 5 ? 'Easy' : l <= 15 ? 'Getting trickier' : l <= 30 ? 'Medium' : l <= 50 ? 'Hard' : 'Very hard' }
+    function label(l) {
+      if (l <= 4) return 'Beginner';
+      if (l <= 9) return 'Easy';
+      if (l <= 24) return 'Tricky';
+      if (l <= 49) return 'Medium';
+      if (l <= 99) return 'Advanced';
+      if (l <= 199) return 'Hard';
+      if (l <= 399) return 'Expert';
+      if (l < 565) return 'Grandmaster (400+)';
+      return 'Max Challenge (25 Bottles)';
+    }
 
     function gen(l) {
       const p = params(l);
@@ -615,11 +682,14 @@ const GAME_HTML = `<!DOCTYPE html>
       render();
     }
     function render() {
-      const n = B.length, perRow = n <= 5 ? n : Math.ceil(n / 2), rows = n <= 5 ? 1 : 2, bd = $('board');
+      const n = B.length;
+      const rows = n <= 5 ? 1 : (n <= 14 ? 2 : (n <= 21 ? 3 : 4));
+      const perRow = n <= 5 ? n : Math.ceil(n / rows);
+      const bd = $('board');
       bd.innerHTML = ''; els = [];
       { const s = $('stream'); s.getAnimations().forEach(x => x.cancel()); s.style.display = 'none'; }
-      const aw = bd.clientWidth, ah = bd.clientHeight - 120;
-      const bwMax = Math.min(42, aw / (perRow + .24 * (perRow - 1))), bhMax = ah / (rows + .24 * (rows - 1));
+      const aw = Math.max(280, bd.clientWidth - 20), ah = bd.clientHeight - 120;
+      const bwMax = Math.min(42, aw / (perRow + .4 * (perRow - 1))), bhMax = ah / (rows + .28 * (rows - 1));
       let bw = Math.min(bwMax, bhMax / 2.7);
       let bh = Math.min(bhMax, bw * 2.7);
       if (bh < 44) {
@@ -655,7 +725,7 @@ const GAME_HTML = `<!DOCTYPE html>
       });
       $('unc').textContent = undos; $('abc').textContent = adds;
       $('un').parentNode.classList.toggle('off', !hist.length || !undos);
-      $('ab').parentNode.classList.toggle('off', !adds);
+      $('ab').parentNode.classList.toggle('off', !adds || B.length >= 25);
     }
     const canPour = (a, b) => a !== b && B[a].length && B[b].length < CAP && !cov[a] && !cov[b] && (!B[b].length || B[b][B[b].length - 1].c === B[a][B[a].length - 1].c);
     function unlockCheck() {
@@ -743,7 +813,7 @@ const GAME_HTML = `<!DOCTYPE html>
       render();
     }
     function addBottle() {
-      if (busy || !adds) return false; adds--; B.push([]); cov.push(false); sel = null; render(); sfxDrop(620, 0.08);
+      if (busy || !adds || B.length >= 25) return false; adds--; B.push([]); cov.push(false); sel = null; render(); sfxDrop(620, 0.08);
       return true;
     }
     function confetti() {
@@ -788,12 +858,12 @@ const GAME_HTML = `<!DOCTYPE html>
     window.addEventListener('resize', () => { if (!busy) render() });
     let SP = 1.15, auto = false, running = false;
     function solve(b0, cv0) {
-      const st0 = b0.map(x => x.map(u => u.c + (u.h ? 16 : 0))), anyC = cv0.some(Boolean), cs = v => v.map(q => q ? 1 : 0).join('');
+      const st0 = b0.map(x => x.map(u => u.c + (u.h ? 64 : 0))), anyC = cv0.some(Boolean), cs = v => v.map(q => q ? 1 : 0).join('');
       const k = (s, v) => (anyC ? s.map(x => x.join(',')) : s.map(x => x.join(',')).sort()).join('|') + '#' + cs(v);
-      const fullS = x => x.length === CAP && x.every(c => c < 16 && c === x[0]);
+      const fullS = x => x.length === CAP && x.every(c => c < 64 && c === x[0]);
       const unl = (s, v) => { v.forEach((q, i) => { if (q) { const kb = i > 0 ? i - 1 : i + 1; if (kb < s.length && fullS(s[kb])) v[i] = false } }) };
-      const H = s => { let h = 0; for (const x of s) { let i = 1; while (i < x.length && (x[i] & 15) === (x[0] & 15)) i++; h += x.length - i; for (const v of x) if (v > 15) h += .5 } return h };
-      const done = s => s.every(x => !x.length || (x.length === CAP && x.every(c => c < 16 && c === x[0])));
+      const H = s => { let h = 0; for (const x of s) { let i = 1; while (i < x.length && (x[i] & 63) === (x[0] & 63)) i++; h += x.length - i; for (const v of x) if (v >= 64) h += .5 } return h };
+      const done = s => s.every(x => !x.length || (x.length === CAP && x.every(c => c < 64 && c === x[0])));
       const N = [{ s: st0, cv: cv0.slice(), p: -1, m: null, g: 0 }], seen = new Set([k(st0, cv0)]), hp = [[H(st0) * 3, 0]];
       const push = e => { hp.push(e); let i = hp.length - 1; while (i > 0) { const p = (i - 1) >> 1; if (hp[p][0] <= hp[i][0]) break;[hp[p], hp[i]] = [hp[i], hp[p]]; i = p } };
       const pop = () => { const t = hp[0], l = hp.pop(); if (hp.length) { hp[0] = l; let i = 0; for (; ;) { const a = 2 * i + 1, c = a + 1; let m = i; if (a < hp.length && hp[a][0] < hp[m][0]) m = a; if (c < hp.length && hp[c][0] < hp[m][0]) m = c; if (m === i) break;[hp[m], hp[i]] = [hp[i], hp[m]]; i = m } } return t };
@@ -811,7 +881,7 @@ const GAME_HTML = `<!DOCTYPE html>
             if (cv[d] || a === d || y.length >= CAP || (y.length && y[y.length - 1] !== top) || (!y.length && uni)) continue;
             let n = 0; while (n < x.length && x[x.length - 1 - n] === top && y.length + n < CAP) n++;
             const ns = s.map(z => z.slice()); for (let q = 0; q < n; q++)ns[d].push(ns[a].pop());
-            if (ns[a].length) ns[a][ns[a].length - 1] &= 15;
+            if (ns[a].length) ns[a][ns[a].length - 1] &= 63;
             any = true;
             const nc = cv.slice(); unl(ns, nc);
             const kk = k(ns, nc); if (seen.has(kk)) continue; seen.add(kk);
@@ -866,6 +936,126 @@ const GAME_HTML = `<!DOCTYPE html>
     $('play').onclick = startGame;
     $('lvin').onkeydown = e => { if (e.key === 'Enter') startGame() };
     $('lv').parentNode.onclick = openStart;
+    // Animated Background: Rising 3D Liquid Bubbles & Ambient Sparkles
+    (function initBgAnimation() {
+      const cv = document.getElementById('bg-canvas');
+      if (!cv) return;
+      const ctx = cv.getContext('2d');
+      let W = 0, H = 0, dpr = 1;
+
+      function resize() {
+        dpr = Math.min(window.devicePixelRatio || 1, 2);
+        W = window.innerWidth;
+        H = window.innerHeight;
+        cv.width = W * dpr;
+        cv.height = H * dpr;
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      }
+      resize();
+      window.addEventListener('resize', resize);
+
+      const BUBBLE_COUNT = Math.min(40, Math.max(22, Math.floor(window.innerWidth / 24)));
+      const bubbles = [];
+      const ripples = [];
+
+      for (let i = 0; i < BUBBLE_COUNT; i++) {
+        bubbles.push({
+          x: Math.random() * W,
+          y: Math.random() * H,
+          r: 3 + Math.random() * 13,
+          speed: 0.35 + Math.random() * 0.85,
+          wobble: Math.random() * Math.PI * 2,
+          wobbleSpeed: 0.02 + Math.random() * 0.03,
+          wobbleAmp: 0.4 + Math.random() * 0.7,
+          alpha: 0.22 + Math.random() * 0.38,
+          hue: Math.random() < 0.6 ? 190 : 275
+        });
+      }
+
+      window.addEventListener('pointerdown', (e) => {
+        for (let i = 0; i < 5; i++) {
+          bubbles.push({
+            x: e.clientX + (Math.random() - 0.5) * 22,
+            y: e.clientY + (Math.random() - 0.5) * 22,
+            r: 2.5 + Math.random() * 5,
+            speed: 1.1 + Math.random() * 1.5,
+            wobble: Math.random() * Math.PI * 2,
+            wobbleSpeed: 0.05,
+            wobbleAmp: 1.1,
+            alpha: 0.6 + Math.random() * 0.3,
+            hue: 180 + Math.random() * 110,
+            burst: true
+          });
+        }
+        ripples.push({
+          x: e.clientX,
+          y: e.clientY,
+          r: 6,
+          maxR: 45 + Math.random() * 20,
+          alpha: 0.35
+        });
+        if (bubbles.length > BUBBLE_COUNT + 15) {
+          bubbles.splice(0, bubbles.length - (BUBBLE_COUNT + 15));
+        }
+      }, { passive: true });
+
+      function loop() {
+        ctx.clearRect(0, 0, W, H);
+
+        for (let i = ripples.length - 1; i >= 0; i--) {
+          const rp = ripples[i];
+          rp.r += 1.8;
+          rp.alpha *= 0.94;
+          if (rp.alpha < 0.02 || rp.r > rp.maxR) {
+            ripples.splice(i, 1);
+            continue;
+          }
+          ctx.beginPath();
+          ctx.arc(rp.x, rp.y, rp.r, 0, Math.PI * 2);
+          ctx.strokeStyle = `rgba(180, 230, 255, ${rp.alpha.toFixed(3)})`;
+          ctx.lineWidth = 1.5;
+          ctx.stroke();
+        }
+
+        for (let i = 0; i < bubbles.length; i++) {
+          const b = bubbles[i];
+          b.wobble += b.wobbleSpeed;
+          b.x += Math.sin(b.wobble) * b.wobbleAmp;
+          b.y -= b.speed;
+
+          if (b.y < -b.r * 2) {
+            if (b.burst) {
+              bubbles.splice(i, 1);
+              i--;
+              continue;
+            }
+            b.y = H + b.r * 2;
+            b.x = Math.random() * W;
+          }
+
+          ctx.beginPath();
+          ctx.arc(b.x, b.y, b.r, 0, Math.PI * 2);
+          ctx.strokeStyle = `hsla(${b.hue}, 85%, 75%, ${(b.alpha * 0.65).toFixed(3)})`;
+          ctx.lineWidth = Math.max(1, b.r * 0.1);
+          ctx.stroke();
+
+          const grad = ctx.createRadialGradient(b.x - b.r * 0.3, b.y - b.r * 0.3, b.r * 0.08, b.x, b.y, b.r);
+          grad.addColorStop(0, `hsla(${b.hue}, 90%, 95%, ${(b.alpha * 0.55).toFixed(3)})`);
+          grad.addColorStop(0.5, `hsla(${b.hue}, 80%, 65%, ${(b.alpha * 0.2).toFixed(3)})`);
+          grad.addColorStop(1, `hsla(${b.hue}, 90%, 50%, ${(b.alpha * 0.04).toFixed(3)})`);
+          ctx.fillStyle = grad;
+          ctx.fill();
+
+          ctx.beginPath();
+          ctx.arc(b.x - b.r * 0.38, b.y - b.r * 0.38, Math.max(1, b.r * 0.24), 0, Math.PI * 2);
+          ctx.fillStyle = `rgba(255, 255, 255, ${(b.alpha * 0.85).toFixed(3)})`;
+          ctx.fill();
+        }
+
+        requestAnimationFrame(loop);
+      }
+      requestAnimationFrame(loop);
+    })();
     build();
     openStart();
   </script>
