@@ -75,7 +75,7 @@ const GAME_HTML = `<!DOCTYPE html>
     header {
       display: flex;
       align-items: center;
-      justify-content: space-between;
+      justify-content: center;
       padding-top: 6px;
       margin-bottom: 4px;
     }
@@ -87,7 +87,7 @@ const GAME_HTML = `<!DOCTYPE html>
     }
 
     .title b {
-      font-size: 24px;
+      font-size: 26px;
       font-weight: 600
     }
 
@@ -97,6 +97,42 @@ const GAME_HTML = `<!DOCTYPE html>
       font-size: 13px;
       margin-top: 2px;
       min-height: 15px
+    }
+
+    .lvl-prog-wrap {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      margin-top: 8px;
+    }
+
+    .lvl-prog-bar {
+      width: 200px;
+      max-width: 58vw;
+      height: 12px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.14);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      overflow: hidden;
+      box-shadow: inset 0 2px 3px rgba(0, 0, 0, 0.45);
+    }
+
+    #lvl-prog-fill {
+      width: 0%;
+      height: 100%;
+      border-radius: 999px;
+      background: linear-gradient(90deg, #22d3ee, #34d27b);
+      box-shadow: 0 0 8px rgba(52, 210, 123, 0.55);
+      transition: width .35s cubic-bezier(.4, 0, .2, 1);
+    }
+
+    #lvl-prog-txt {
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--ink);
+      white-space: nowrap;
+      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.45);
     }
 
     .ib {
@@ -382,11 +418,12 @@ const GAME_HTML = `<!DOCTYPE html>
     }
 
     .card {
-      background: linear-gradient(#34206b, #1f1245);
+      background: linear-gradient(135deg, #34206b, #1f1245);
       border: 2px solid #b794ff55;
       border-radius: 26px;
-      padding: 28px 34px;
+      padding: 28px 32px;
       text-align: center;
+      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.55);
       animation: pop .5s cubic-bezier(.3, 1.5, .5, 1)
     }
 
@@ -395,6 +432,50 @@ const GAME_HTML = `<!DOCTYPE html>
         transform: scale(.6);
         opacity: 0
       }
+    }
+
+    .win-ribbon {
+      display: inline-block;
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--gold);
+      background: rgba(255, 210, 63, 0.15);
+      border: 1px solid rgba(255, 210, 63, 0.45);
+      padding: 5px 16px;
+      border-radius: 20px;
+      margin-bottom: 10px;
+    }
+
+    .stars-container {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 10px;
+      margin: 4px 0 10px;
+    }
+
+    .star {
+      font-size: 38px;
+      color: var(--gold);
+      text-shadow: 0 0 16px rgba(255, 210, 63, 0.75);
+      display: inline-block;
+    }
+
+    .star.s2 {
+      font-size: 46px;
+      transform: translateY(-4px);
+    }
+
+    #win.on .s1 { animation: starPop .45s .15s cubic-bezier(.34, 1.56, .64, 1) both; }
+    #win.on .s2 { animation: starPop .45s .3s cubic-bezier(.34, 1.56, .64, 1) both; }
+    #win.on .s3 { animation: starPop .45s .45s cubic-bezier(.34, 1.56, .64, 1) both; }
+
+    @keyframes starPop {
+      0% { transform: scale(0) rotate(-35deg); opacity: 0; }
+      70% { transform: scale(1.28) rotate(8deg); }
+      100% { transform: scale(1) rotate(0deg); opacity: 1; }
     }
 
     .card h2 {
@@ -464,9 +545,14 @@ const GAME_HTML = `<!DOCTYPE html>
   <canvas id="bg-canvas"></canvas>
   <div id="app">
     <header>
-      <button class="ib" id="rs" aria-label="Restart level">↻</button>
-      <div class="title"><b id="lv">Level 1</b><small id="df"></small></div>
-      <button class="ib" id="snd" aria-label="Sound on or off">♪</button>
+      <div class="title">
+        <b id="lv">Level 1</b>
+        <small id="df"></small>
+        <div class="lvl-prog-wrap" aria-label="Level progress">
+          <div class="lvl-prog-bar"><div id="lvl-prog-fill"></div></div>
+          <span id="lvl-prog-txt">0%</span>
+        </div>
+      </div>
     </header>
     <div id="board"></div>
     <footer>
@@ -486,7 +572,13 @@ const GAME_HTML = `<!DOCTYPE html>
   <div id="toast"></div>
   <div id="win">
     <div class="card">
-      <h2>Level complete</h2>
+      <div class="win-ribbon">Congratulations!</div>
+      <div class="stars-container" aria-hidden="true">
+        <span class="star s1">★</span>
+        <span class="star s2">★</span>
+        <span class="star s3">★</span>
+      </div>
+      <h2 id="win-lvl-text">Level Complete!</h2>
       <p id="wm"></p><button class="go" id="nx">Next level</button>
     </div>
   </div>
@@ -742,6 +834,11 @@ const GAME_HTML = `<!DOCTYPE html>
       $('unc').textContent = undos; $('abc').textContent = adds;
       $('un').parentNode.classList.toggle('off', !hist.length || !undos);
       $('ab').parentNode.classList.toggle('off', !adds || B.length >= 25);
+      const totalColors = Math.max(1, params(L).colors);
+      const doneColors = B.filter(full).length;
+      const pct = Math.min(100, Math.round((doneColors / totalColors) * 100));
+      if ($('lvl-prog-fill')) $('lvl-prog-fill').style.width = pct + '%';
+      if ($('lvl-prog-txt')) $('lvl-prog-txt').textContent = pct + '%';
     }
     const canPour = (a, b) => a !== b && B[a].length && B[b].length < CAP && !cov[a] && !cov[b] && (!B[b].length || B[b][B[b].length - 1].c === B[a][B[a].length - 1].c);
     function unlockCheck() {
@@ -856,6 +953,7 @@ const GAME_HTML = `<!DOCTYPE html>
       confetti();
       busy = true; sfxWin();
       try { localStorage.setItem('ws_level', L + 1) } catch (e) { }
+      if ($('win-lvl-text')) $('win-lvl-text').textContent = 'Level ' + L + ' Complete!';
       $('wm').textContent = label(L + 1) == label(L) ? 'Level ' + (L + 1) + ' is next.' : 'Level ' + (L + 1) + ' gets ' + label(L + 1).toLowerCase() + '.';
       await sleep(400);
       $('win').classList.add('on');
@@ -868,9 +966,7 @@ const GAME_HTML = `<!DOCTYPE html>
       }
     }
     $('nx').onclick = () => { $('win').classList.remove('on'); L++; build() };
-    $('rs').onclick = () => { if (!busy || $('win').classList.contains('on')) build() };
     $('un').onclick = undo; $('ab').onclick = addBottle;
-    $('snd').onclick = function () { sound = !sound; this.style.opacity = sound ? 1 : .45; toast(sound ? 'Sound on' : 'Sound off') };
     window.addEventListener('resize', () => { if (!busy) render() });
     let SP = 1.42, auto = false, running = false;
     function solve(b0, cv0) {
@@ -934,7 +1030,6 @@ const GAME_HTML = `<!DOCTYPE html>
     }
     $('au').onclick = function () {
       auto = !auto; this.classList.toggle('on', auto); SP = auto ? 1.15 : 1.42;
-      toast(auto ? 'Auto play on' : 'Auto play off');
       if (auto) { sel = null; busy = false; sync(); run() }
     };
     function openStart() {
