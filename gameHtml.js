@@ -1151,10 +1151,10 @@ const GAME_HTML = `<!DOCTYPE html>
   </div>
   <script>
     const COL = [
-      '#ff4d8d', '#ff8a1f', '#ffd23f', '#7ddc1f', '#19c37d', '#22d3ee',
-      '#4f7cff', '#9b5cff', '#ef3b3b', '#9a6240', '#14b8a6', '#f472b6',
-      '#06b6d4', '#e2e8f0', '#8b5cf6', '#f59e0b', '#10b981', '#6366f1',
-      '#ec4899', '#84cc16', '#3b82f6', '#a855f7', '#d97706', '#14532d'
+      '#ff3377', '#ff7700', '#ffe600', '#66e314', '#00b86b', '#00d8f6',
+      '#2563eb', '#9333ea', '#dc2626', '#854d27', '#0f766e', '#f9a8d4',
+      '#f1f5f9', '#94a3b8', '#14532d', '#808000', '#fb7185', '#d946ef',
+      '#1e3a8a', '#fed7aa', '#86efac', '#7dd3fc', '#881337', '#c4b5fd'
     ];
     const CAP = 4, $ = s => document.getElementById(s), sleep = ms => new Promise(r => setTimeout(r, ms));
     let mode = 'classic', theme = 'cosmic', L = 1, SL = 1, ML = 1, B = [], cov = [], els = [], sel = null, busy = false, hist = [], undos = 5, adds = 2, sound = true, ac = null;
@@ -1435,7 +1435,7 @@ const GAME_HTML = `<!DOCTYPE html>
         return { b, cv };
       }
     }
-    const full = x => x.length === CAP && x.every(u => u.c === x[0].c && !u.h);
+    const full = x => x.length === CAP && x.every(u => u.c === x[0].c && !u.h) && !(shapeState && x[0].c === shapeState.color);
     function solved(b) { return b.every(x => !x.length || full(x)) }
     const isGameWon = () => shapeState ? Boolean(shapeState.units >= shapeState.cap && solved(B)) : solved(B);
 
