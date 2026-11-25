@@ -856,19 +856,21 @@ const GAME_HTML = `<!DOCTYPE html>
     }
 
     #st .card {
-      width: min(90vw, 355px);
-      padding: 26px 22px;
+      width: min(92vw, 376px);
+      padding: 24px 18px;
     }
 
-    .mode-switch,
-    .theme-switch {
+    .mode-switch {
       display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 10px;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
       margin: 6px 0 14px;
     }
 
     .theme-switch {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
       margin: 0 0 16px;
     }
 
@@ -902,8 +904,8 @@ const GAME_HTML = `<!DOCTYPE html>
       flex-direction: column;
       align-items: center;
       gap: 4px;
-      padding: 12px 10px;
-      border-radius: 18px;
+      padding: 11px 6px;
+      border-radius: 16px;
       border: 2px solid rgba(183, 148, 255, 0.25);
       background: rgba(21, 11, 51, 0.72);
       color: var(--ink);
@@ -923,17 +925,18 @@ const GAME_HTML = `<!DOCTYPE html>
     }
 
     .mode-ico {
-      font-size: 26px;
+      font-size: 23px;
       line-height: 1.1;
     }
 
     .mode-name {
-      font-size: 15px;
+      font-size: 13px;
       font-weight: 600;
     }
 
     .mode-sub {
-      font-size: 11px;
+      font-size: 10px;
+      line-height: 1.2;
       color: var(--mute);
     }
 
@@ -1030,45 +1033,15 @@ const GAME_HTML = `<!DOCTYPE html>
     }
 
     .shape-cork {
-      position: absolute;
-      left: var(--smx, 50%);
-      top: 1px;
-      width: 21%;
-      height: 13%;
-      z-index: 4;
       opacity: 0;
-      transform: translate(-50%, -20px);
-      transition: transform .42s cubic-bezier(.34, 1.35, .64, 1), opacity .2s ease-out;
-      filter: drop-shadow(0 3px 5px rgba(0, 0, 0, .45));
+      transform: translateY(-20px);
+      transition: transform .42s cubic-bezier(.34, 1.35, .64, 1), opacity .22s ease-out;
       pointer-events: none;
-    }
-
-    .shape-cork::before {
-      content: "";
-      position: absolute;
-      left: -2px;
-      right: -2px;
-      top: 0;
-      height: 42%;
-      border-radius: 6px 6px 2px 2px;
-      background: linear-gradient(180deg, #eed2af 0%, #caa06d 45%, #a8733a 100%);
-      box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.75);
-    }
-
-    .shape-cork::after {
-      content: "";
-      position: absolute;
-      left: 3px;
-      right: 3px;
-      top: 40%;
-      height: 60%;
-      border-radius: 0 0 4px 4px;
-      background: linear-gradient(90deg, #945d27 0%, #caa06d 25%, #e5c396 48%, #ba884e 75%, #7a4616 100%);
     }
 
     .shape-wrap.done .shape-cork {
       opacity: 1;
-      transform: translate(-50%, 2px);
+      transform: translateY(0px);
     }
 
     #shape-fish {
@@ -1140,6 +1113,11 @@ const GAME_HTML = `<!DOCTYPE html>
           <span class="mode-name">Shape Fill</span>
           <span class="mode-sub">Fill the shape</span>
         </button>
+        <button type="button" class="mode-btn" id="m-mix">
+          <span class="mode-ico">✨</span>
+          <span class="mode-name">Mix Mode</span>
+          <span class="mode-sub">Normal•Pipe•Shape</span>
+        </button>
       </div>
       <div class="theme-switch" role="group" aria-label="Background theme">
         <button type="button" class="theme-btn on" id="th-cosmic">🌌 Cosmic Blue</button>
@@ -1179,25 +1157,41 @@ const GAME_HTML = `<!DOCTYPE html>
       '#ec4899', '#84cc16', '#3b82f6', '#a855f7', '#d97706', '#14532d'
     ];
     const CAP = 4, $ = s => document.getElementById(s), sleep = ms => new Promise(r => setTimeout(r, ms));
-    let mode = 'classic', theme = 'cosmic', L = 1, SL = 1, B = [], cov = [], els = [], sel = null, busy = false, hist = [], undos = 5, adds = 2, sound = true, ac = null;
+    let mode = 'classic', theme = 'cosmic', L = 1, SL = 1, ML = 1, B = [], cov = [], els = [], sel = null, busy = false, hist = [], undos = 5, adds = 2, sound = true, ac = null;
     let shapeState = null;
     try {
       L = Math.max(1, parseInt(localStorage.getItem('ws_level')) || 1);
       SL = Math.max(1, parseInt(localStorage.getItem('ws_shape_level')) || 1);
-      if (localStorage.getItem('ws_mode') === 'shape') mode = 'shape';
+      ML = Math.max(1, parseInt(localStorage.getItem('ws_mix_level')) || 1);
+      const savedMode = localStorage.getItem('ws_mode');
+      if (savedMode === 'shape' || savedMode === 'mix') mode = savedMode;
       if (localStorage.getItem('ws_theme') === 'wood') theme = 'wood';
     } catch (e) { }
-    const curLv = () => mode === 'shape' ? SL : L;
+    const curLv = () => mode === 'shape' ? SL : (mode === 'mix' ? ML : L);
     function setLv(v) {
       const n = v >= 1 ? Math.min(v, 99999) : 1;
       if (mode === 'shape') { SL = n; try { localStorage.setItem('ws_shape_level', SL) } catch (e) { } }
+      else if (mode === 'mix') { ML = n; try { localStorage.setItem('ws_mix_level', ML) } catch (e) { } }
       else { L = n; try { localStorage.setItem('ws_level', L) } catch (e) { } }
     }
     function advanceLv() { setLv(curLv() + 1); }
+    const mixStep = lv => (lv - 1) % 3;
+    function resolveShapeForLevel(lv, m = mode) {
+      if (m === 'shape') return SHAPES[(lv - 1) % SHAPES.length];
+      if (m === 'mix') {
+        const st = mixStep(lv);
+        if (st === 1) return SHAPES[0];
+        if (st === 2) {
+          const nonPipe = SHAPES.slice(1);
+          return nonPipe[Math.floor((lv - 1) / 3) % nonPipe.length];
+        }
+      }
+      return null;
+    }
 
     const SHAPES = [
       {
-        id: 'pipe', name: 'Pipe Lab', yMin: 29, yMax: 190.5, mouthX: 0.22, mouthY: 0.08,
+        id: 'pipe', name: 'Pipe Lab', yMin: 29, yMax: 190.5, mouthX: 0.22, mouthY: 0.08, corkRx: 11.8,
         d: 'M27,15 H61 Q66,15 66,20 Q66,25 60,26 L60,45 L90,45 Q108,45 108,63 L108,86 L138,86 Q156,86 156,104 L156,126 A35,35 0 1,1 132,126 L132,112 Q132,108 128,108 L108,108 L108,132 Q108,142 90,142 Q72,142 72,132 L72,71 Q72,67 68,67 L60,67 L60,80 Q60,89 44,89 Q28,89 28,80 L28,26 Q22,25 22,20 Q22,15 27,15 Z',
         clipD: 'M31.5,27 H56.5 V48.5 H90 Q104.5,48.5 104.5,63 V89.5 H138 Q152.5,89.5 152.5,104 V128.7 A31.5,31.5 0 1,1 135.5,128.7 V112 Q135.5,104.5 128,104.5 H104.5 V132 Q104.5,138.5 90,138.5 Q75.5,138.5 75.5,132 V71 Q75.5,63.5 68,63.5 H56.5 V80 Q56.5,85.5 44,85.5 Q31.5,85.5 31.5,80 Z',
         specD: 'M34,32 H40 V78 Q36,80 34,74 Z M78,68 H83 V130 Q79,132 78,125 Z M116,158 C116,142 125,131 136,128 C128,136 123,147 123,160 C123,170 127,179 133,184 C121,180 116,170 116,158 Z',
@@ -1206,7 +1200,7 @@ const GAME_HTML = `<!DOCTYPE html>
         facetD: ''
       },
       {
-        id: 'flask', name: 'Potion Flask', yMin: 36, yMax: 191,
+        id: 'flask', name: 'Potion Flask', yMin: 36, yMax: 191, corkRx: 13.5,
         d: 'M76,16 H124 Q129,16 129,23 Q129,30 121,31 L117,33 L117,64 C149,78 168,107 168,140 C168,176 138,196 100,196 C62,196 32,176 32,140 C32,107 51,78 83,64 L83,33 L79,31 Q71,30 71,23 Q71,16 76,16 Z',
         clipD: 'M86,34 L114,34 L114,66 C145,80 163,108 163,140 C163,172 135,191 100,191 C65,191 37,172 37,140 C37,108 55,80 86,66 Z',
         specD: 'M48,136 C48,108 64,86 86,74 C72,94 60,114 60,140 C60,156 66,168 74,176 C57,168 48,153 48,136 Z',
@@ -1215,7 +1209,7 @@ const GAME_HTML = `<!DOCTYPE html>
         facetD: ''
       },
       {
-        id: 'heart', name: 'Crystal Heart', yMin: 32, yMax: 186,
+        id: 'heart', name: 'Crystal Heart', yMin: 32, yMax: 186, corkRx: 11.5,
         d: 'M82,16 H118 Q123,16 123,22 Q123,28 116,29 L113,34 C124,24 142,20 158,30 C180,44 186,74 174,104 C162,134 128,166 100,193 C72,166 38,134 26,104 C14,74 20,44 42,30 C58,20 76,24 87,34 L84,29 Q77,28 77,22 Q77,16 82,16 Z',
         clipD: 'M88,36 L112,36 C123,27 140,25 154,34 C174,47 179,74 168,102 C157,130 125,160 100,186 C75,160 43,130 32,102 C21,74 26,47 46,34 C60,25 77,27 88,36 Z',
         specD: 'M38,88 C30,66 36,46 52,38 C60,34 68,36 72,41 C54,48 44,68 49,92 C52,104 59,115 66,125 C52,115 43,103 38,88 Z',
@@ -1223,7 +1217,7 @@ const GAME_HTML = `<!DOCTYPE html>
         facetD: ''
       },
       {
-        id: 'diamond', name: 'Crystal Gem', yMin: 38, yMax: 189,
+        id: 'diamond', name: 'Crystal Gem', yMin: 38, yMax: 189, corkRx: 13.5,
         d: 'M78,16 H122 Q127,16 127,22 Q127,28 120,29 L116,35 L154,52 Q166,58 172,72 L182,95 Q186,104 179,113 L110,191 Q100,200 90,191 L21,113 Q14,104 18,95 L28,72 Q34,58 46,52 L84,35 L80,29 Q73,28 73,22 Q73,16 78,16 Z',
         clipD: 'M86,36 L114,36 L151,56 Q162,62 167,74 L176,96 Q179,103 173,111 L107,185 Q100,192 93,185 L27,111 Q21,103 24,96 L33,74 Q38,62 49,56 Z',
         specD: 'M34,98 L44,72 Q48,64 58,60 L72,53 L56,101 L86,166 L36,108 Q32,103 34,98 Z',
@@ -1231,7 +1225,7 @@ const GAME_HTML = `<!DOCTYPE html>
         facetD: 'M27,103 H173 M62,56 L50,103 L100,185 M138,56 L150,103 L100,185'
       },
       {
-        id: 'drop', name: 'Aqua Drop', yMin: 32, yMax: 191,
+        id: 'drop', name: 'Aqua Drop', yMin: 32, yMax: 191, corkRx: 8.8,
         d: 'M86,16 H114 Q118,16 118,21 Q118,26 112,27 C124,54 166,100 166,139 C166,174 137,196 100,196 C63,196 34,174 34,139 C34,100 76,54 88,27 Q82,26 82,21 Q82,16 86,16 Z',
         clipD: 'M91,29 L109,29 C121,57 161,102 161,139 C161,171 134,191 100,191 C66,191 39,171 39,139 C39,102 79,57 91,29 Z',
         specD: 'M47,138 C47,112 68,80 86,52 C74,84 58,112 58,138 C58,156 66,169 77,178 C58,170 47,156 47,138 Z',
@@ -1239,7 +1233,7 @@ const GAME_HTML = `<!DOCTYPE html>
         facetD: ''
       },
       {
-        id: 'star', name: 'Star Jar', yMin: 36, yMax: 180,
+        id: 'star', name: 'Star Jar', yMin: 36, yMax: 180, corkRx: 10.8,
         d: 'M82,16 H118 Q123,16 123,22 Q123,28 116,29 L114,42 Q118,62 132,70 L174,80 Q186,83 177,94 L146,123 Q140,129 143,138 L154,177 Q157,189 145,183 L107,160 Q100,156 93,160 L55,183 Q43,189 46,177 L57,138 Q60,129 54,123 L23,94 Q14,83 26,80 L68,70 Q82,62 86,42 L84,29 Q77,28 77,22 Q77,16 82,16 Z',
         clipD: 'M89,34 L111,34 Q115,65 130,74 L170,84 Q179,86 172,94 L142,121 Q136,128 139,138 L149,174 Q151,182 143,177 L107,155 Q100,151 93,155 L57,177 Q49,182 51,174 L61,138 Q64,128 58,121 L28,94 Q21,86 30,84 L70,74 Q85,65 89,34 Z',
         specD: 'M34,90 L68,80 Q84,74 88,52 L84,78 Q74,88 38,94 Z',
@@ -1247,7 +1241,7 @@ const GAME_HTML = `<!DOCTYPE html>
         facetD: ''
       },
       {
-        id: 'hex', name: 'Hex Prism', yMin: 38, yMax: 189,
+        id: 'hex', name: 'Hex Prism', yMin: 38, yMax: 189, corkRx: 12.6,
         d: 'M80,16 H120 Q125,16 125,22 Q125,28 118,29 L115,36 L160,60 Q172,67 172,81 L172,143 Q172,157 160,164 L112,191 Q100,198 88,191 L40,164 Q28,157 28,143 L28,81 Q28,67 40,60 L85,36 L82,29 Q75,28 75,22 Q75,16 80,16 Z',
         clipD: 'M87,37 L113,37 L157,64 Q167,70 167,82 L167,142 Q167,154 157,160 L109,186 Q100,191 91,186 L43,160 Q33,154 33,142 L33,82 Q33,70 43,64 Z',
         specD: 'M40,84 Q40,74 49,68 L76,52 L52,78 L52,144 L72,166 L44,152 Q40,149 40,141 Z',
@@ -1443,10 +1437,10 @@ const GAME_HTML = `<!DOCTYPE html>
     }
     const full = x => x.length === CAP && x.every(u => u.c === x[0].c && !u.h);
     function solved(b) { return b.every(x => !x.length || full(x)) }
-    const isGameWon = () => mode === 'shape' ? Boolean(shapeState && shapeState.units >= shapeState.cap && solved(B)) : solved(B);
+    const isGameWon = () => shapeState ? Boolean(shapeState.units >= shapeState.cap && solved(B)) : solved(B);
 
-    function paramsShape(l) {
-      const sh = SHAPES[(l - 1) % SHAPES.length];
+    function paramsShape(l, overrideShape) {
+      const sh = overrideShape || SHAPES[(l - 1) % SHAPES.length];
       const targetColor = ((l - 1) * 3) % 8;
       let initUnits, needed, other;
       if (l <= 2) { initUnits = 1; needed = 4; other = 3; }         // 6 bottles (4 filled), cap 5 -> 1 T/bottle
@@ -1552,8 +1546,8 @@ const GAME_HTML = `<!DOCTYPE html>
       return null;
     }
 
-    function genShape(l) {
-      const p = paramsShape(l);
+    function genShape(l, overrideShape) {
+      const p = paramsShape(l, overrideShape);
       const otherCols = [];
       for (let idx = 1; otherCols.length < p.other && idx <= COL.length; idx++) {
         const c = (p.targetColor + idx * 5) % COL.length;
@@ -1664,6 +1658,18 @@ const GAME_HTML = `<!DOCTYPE html>
       const flowPath = sh.flowD || 'M100,24 V188';
       const flowWidth = sh.id === 'pipe' ? 9 : 7;
       const mouthCx = (sh.mouthX || 0.5) * 200;
+      const rxPlug = sh.corkRx || 12;
+      const rxPlugBot = +(rxPlug * 0.84).toFixed(1);
+      const rxCap = +(rxPlug * 1.38).toFixed(1);
+      const lipRx = +(rxPlug * 1.48).toFixed(1);
+      const corkMarkup = ''
+        + '<g id="shape-cork" class="shape-cork">'
+        + '  <path d="M' + (mouthCx - rxPlug).toFixed(1) + ',16.5 L' + (mouthCx - rxPlugBot).toFixed(1) + ',29.5 Q' + mouthCx + ',32.6 ' + (mouthCx + rxPlugBot).toFixed(1) + ',29.5 L' + (mouthCx + rxPlug).toFixed(1) + ',16.5 Z" fill="url(#cork-plug-grad)" stroke="rgba(58,24,5,0.68)" stroke-width="0.7"/>'
+        + '  <path d="M' + (mouthCx - rxPlug).toFixed(1) + ',16.5 Q' + mouthCx + ',19.2 ' + (mouthCx + rxPlug).toFixed(1) + ',16.5 L' + (mouthCx + rxPlug * 0.94).toFixed(1) + ',19.2 Q' + mouthCx + ',21.4 ' + (mouthCx - rxPlug * 0.94).toFixed(1) + ',19.2 Z" fill="rgba(45,16,3,0.34)"/>'
+        + '  <path d="M' + (mouthCx - rxPlug * 0.36).toFixed(1) + ',21 V28 M' + (mouthCx + rxPlug * 0.28).toFixed(1) + ',20.5 V28.5" fill="none" stroke="rgba(75,32,8,0.28)" stroke-width="0.9" stroke-linecap="round"/>'
+        + '  <path d="M' + (mouthCx - rxCap).toFixed(1) + ',9.8 L' + (mouthCx - rxCap).toFixed(1) + ',15.2 Q' + mouthCx + ',18.6 ' + (mouthCx + rxCap).toFixed(1) + ',15.2 L' + (mouthCx + rxCap).toFixed(1) + ',9.8 Z" fill="url(#cork-cap-grad)" stroke="rgba(58,24,5,0.75)" stroke-width="0.75"/>'
+        + '  <ellipse cx="' + mouthCx + '" cy="9.8" rx="' + rxCap + '" ry="3.1" fill="url(#cork-top-grad)" stroke="rgba(255,244,225,0.85)" stroke-width="0.65"/>'
+        + '</g>';
       const fishMarkup = sh.id === 'pipe'
         ? '<g id="shape-fish" style="transform:translate(144px,172px)"><g class="fish-bob">'
           + '<path d="M-8,0 L-13,-4.5 L-11.5,0 L-13,4.5 Z" fill="#ff6b00"/>'
@@ -1675,7 +1681,6 @@ const GAME_HTML = `<!DOCTYPE html>
           + '</g></g>'
         : '';
       return ''
-        + '<div class="shape-cork"></div>'
         + '<svg id="shape-svg" viewBox="0 0 200 210" aria-hidden="true">'
         + '  <defs>'
         + '    <clipPath id="shape-clip"><path d="' + sh.clipD + '"/></clipPath>'
@@ -1701,6 +1706,24 @@ const GAME_HTML = `<!DOCTYPE html>
         + '      <stop offset="0%" stop-color="rgba(255,255,255,0.68)"/>'
         + '      <stop offset="100%" stop-color="rgba(255,255,255,0.08)"/>'
         + '    </linearGradient>'
+        + '    <linearGradient id="cork-plug-grad" x1="0" y1="0" x2="1" y2="0">'
+        + '      <stop offset="0%" stop-color="#6e3410"/>'
+        + '      <stop offset="22%" stop-color="#b97d42"/>'
+        + '      <stop offset="46%" stop-color="#efd0a5"/>'
+        + '      <stop offset="76%" stop-color="#bd7f42"/>'
+        + '      <stop offset="100%" stop-color="#612c0b"/>'
+        + '    </linearGradient>'
+        + '    <linearGradient id="cork-cap-grad" x1="0" y1="0" x2="1" y2="0">'
+        + '      <stop offset="0%" stop-color="#86491b"/>'
+        + '      <stop offset="24%" stop-color="#d29c64"/>'
+        + '      <stop offset="46%" stop-color="#f7deb9"/>'
+        + '      <stop offset="76%" stop-color="#c28549"/>'
+        + '      <stop offset="100%" stop-color="#763c12"/>'
+        + '    </linearGradient>'
+        + '    <linearGradient id="cork-top-grad" x1="0" y1="0" x2="0.4" y2="1">'
+        + '      <stop offset="0%" stop-color="#f7e2c4"/>'
+        + '      <stop offset="100%" stop-color="#cfa06b"/>'
+        + '    </linearGradient>'
         + '  </defs>'
         + '  <path d="' + sh.d + '" fill="url(#shape-glass-bg)"/>'
         + '  <g clip-path="url(#shape-clip)">'
@@ -1725,15 +1748,17 @@ const GAME_HTML = `<!DOCTYPE html>
         + '  <path d="' + sh.d + '" fill="url(#shape-glass-sheen)" stroke="rgba(225,220,255,0.84)" stroke-width="3.2" stroke-linejoin="round" pointer-events="none"/>'
         + '  <path d="' + sh.specD + '" fill="url(#shape-spec-grad)" pointer-events="none"/>'
         + '  <path d="' + sh.specR + '" fill="rgba(255,255,255,0.18)" pointer-events="none"/>'
-        + '  <ellipse cx="' + mouthCx + '" cy="18" rx="18" ry="3.6" fill="rgba(255,255,255,0.20)" stroke="rgba(240,235,255,0.82)" stroke-width="1.6" pointer-events="none"/>'
+        + '  <ellipse cx="' + mouthCx + '" cy="18" rx="' + lipRx + '" ry="3.4" fill="rgba(255,255,255,0.20)" stroke="rgba(240,235,255,0.82)" stroke-width="1.5" pointer-events="none"/>'
+        + corkMarkup
         + '</svg>';
     }
 
     function build() {
       hist = []; undos = 5; adds = 2; sel = null; busy = false;
       const lv = curLv();
-      if (mode === 'shape') {
-        const g = genShape(lv);
+      const targetShape = resolveShapeForLevel(lv, mode);
+      if (targetShape) {
+        const g = genShape(lv, targetShape);
         B = g.b; cov = g.cv; shapeState = g.shape;
         $('lv').textContent = 'Level ' + lv;
         $('df').textContent = shapeState.name + (B.length >= 25 ? ' (25 Bottles)' : '');
@@ -1742,7 +1767,7 @@ const GAME_HTML = `<!DOCTYPE html>
         const g = gen(lv);
         B = g.b; cov = g.cv;
         $('lv').textContent = 'Level ' + lv;
-        $('df').textContent = label(lv);
+        $('df').textContent = (mode === 'mix' ? 'Normal • ' : '') + label(lv);
       }
       render();
     }
@@ -1760,7 +1785,7 @@ const GAME_HTML = `<!DOCTYPE html>
       const aw = Math.max(260, bd.clientWidth - 8);
       const ah = Math.max(260, bd.clientHeight - 24);
       const root = document.documentElement.style;
-      if (mode === 'shape' && shapeState) {
+      if (shapeState) {
         bd.classList.remove('board-dense');
         bd.classList.add('board-shape');
         const sidePairs = (n >= 16 && aw >= 330) ? 2 : (n >= 4 ? 1 : 0);
@@ -1828,7 +1853,6 @@ const GAME_HTML = `<!DOCTYPE html>
           midRow.appendChild(leftSide);
         }
         const shDef = SHAPES.find(s => s.id === shapeState.id) || SHAPES[0];
-        root.setProperty('--smx', ((shDef.mouthX || 0.5) * 100) + '%');
         const shWrap = document.createElement('div');
         shWrap.id = 'shape-wrap';
         shWrap.className = 'shape-wrap';
@@ -1905,7 +1929,7 @@ const GAME_HTML = `<!DOCTYPE html>
       $('unc').textContent = undos; $('abc').textContent = adds;
       $('un').parentNode.classList.toggle('off', !hist.length || !undos);
       $('ab').parentNode.classList.toggle('off', !adds || B.length >= 25);
-      if (mode === 'shape' && shapeState) {
+      if (shapeState) {
         const shDef = SHAPES.find(s => s.id === shapeState.id) || SHAPES[0];
         const frac = Math.min(1, shapeState.units / shapeState.cap);
         const offsetY = (1 - frac) * (shDef.yMax - shDef.yMin);
@@ -1936,7 +1960,7 @@ const GAME_HTML = `<!DOCTYPE html>
         if ($('lvl-prog-fill')) $('lvl-prog-fill').style.width = pct + '%';
         if ($('lvl-prog-txt')) $('lvl-prog-txt').textContent = pct + '%';
       } else {
-        const totalColors = Math.max(1, params(L).colors);
+        const totalColors = Math.max(1, params(curLv()).colors);
         const doneColors = B.filter(full).length;
         const pct = Math.min(100, Math.round((doneColors / totalColors) * 100));
         if ($('lvl-prog-fill')) $('lvl-prog-fill').style.width = pct + '%';
@@ -1944,7 +1968,7 @@ const GAME_HTML = `<!DOCTYPE html>
       }
     }
     const canPour = (a, b) => a !== b && B[a].length && B[b].length < CAP && !cov[a] && !cov[b] && (!B[b].length || B[b][B[b].length - 1].c === B[a][B[a].length - 1].c);
-    const canPourToShape = a => mode === 'shape' && shapeState && a !== null && a >= 0 && B[a] && B[a].length && !cov[a] && B[a][B[a].length - 1].c === shapeState.color && shapeState.units < shapeState.cap;
+    const canPourToShape = a => Boolean(shapeState) && a !== null && a >= 0 && B[a] && B[a].length && !cov[a] && B[a][B[a].length - 1].c === shapeState.color && shapeState.units < shapeState.cap;
     function unlockCheck() {
       let o = false;
       cov.forEach((q, i) => {
@@ -1978,7 +2002,7 @@ const GAME_HTML = `<!DOCTYPE html>
     }
 
     function tapShape() {
-      if (busy || mode !== 'shape' || !shapeState) return;
+      if (busy || !shapeState) return;
       if (sel === null) {
         sfxTap(520);
         toast('Select a bottle with the matching color to fill the ' + shapeState.name + '!');
@@ -2114,7 +2138,7 @@ const GAME_HTML = `<!DOCTYPE html>
       sync();
       if (added) { toast('No moves left, added an extra bottle!'); sfxDrop(420, 0.06) }
       else if (opened) { toast('Bottle unlocked'); sfxDrop(680, 0.06) }
-      else if (mode === 'shape' && shapeState && solved(B) && shapeState.units < shapeState.cap) {
+      else if (shapeState && solved(B) && shapeState.units < shapeState.cap) {
         toast('Now pour the matching color into the ' + shapeState.name + '!');
       }
       if (!hasMove()) toast('No moves left. Undo or restart level.');
@@ -2123,7 +2147,7 @@ const GAME_HTML = `<!DOCTYPE html>
     function undo() {
       if (busy || !hist.length || !undos) return;
       const h = hist.pop(); B = h.B; cov = h.cov;
-      if (mode === 'shape' && shapeState && h.shapeUnits !== undefined) shapeState.units = h.shapeUnits;
+      if (shapeState && h.shapeUnits !== undefined) shapeState.units = h.shapeUnits;
       undos--; sel = null;
       sfxTap(520);
       render();
@@ -2159,15 +2183,20 @@ const GAME_HTML = `<!DOCTYPE html>
       setLv(winLevel + 1);
       if ($('win-lvl-text')) $('win-lvl-text').textContent = 'Level ' + winLevel + ' Cleared!';
       if ($('win-moves')) $('win-moves').textContent = hist.length;
-      if (winMode === 'shape' && shapeState) {
+      const nextLv = winLevel + 1;
+      const nextSh = resolveShapeForLevel(nextLv, winMode);
+      if (shapeState) {
         if ($('win-stat-2-lbl')) $('win-stat-2-lbl').textContent = 'Shape';
         if ($('win-bottles')) $('win-bottles').textContent = shapeState.name;
-        const nextShape = SHAPES[winLevel % SHAPES.length].name;
-        $('wm').textContent = 'Next: Fill ' + nextShape + ' on Level ' + (winLevel + 1);
+        $('wm').textContent = nextSh ? ('Next: Fill ' + nextSh.name + ' on Level ' + nextLv) : ('Next: Normal Bottle Sort on Level ' + nextLv);
       } else {
         if ($('win-stat-2-lbl')) $('win-stat-2-lbl').textContent = 'Bottles';
         if ($('win-bottles')) $('win-bottles').textContent = params(winLevel).colors;
-        $('wm').textContent = label(winLevel + 1) == label(winLevel) ? 'Level ' + (winLevel + 1) + ' is waiting for you' : 'Unlocking ' + label(winLevel + 1).toLowerCase() + ' mode on Level ' + (winLevel + 1);
+        if (nextSh) {
+          $('wm').textContent = 'Next: Fill ' + nextSh.name + ' on Level ' + nextLv;
+        } else {
+          $('wm').textContent = label(nextLv) == label(winLevel) ? 'Level ' + nextLv + ' is waiting for you' : 'Unlocking ' + label(nextLv).toLowerCase() + ' mode on Level ' + nextLv;
+        }
       }
       await sleep(400);
       $('win').classList.add('on');
@@ -2226,7 +2255,7 @@ const GAME_HTML = `<!DOCTYPE html>
           const on = $('win').classList.contains('on');
           if (on) { $('nx').click(); await sleep(400); continue }
           if (isGameWon() || busy) { await sleep(100); continue }
-          const path = mode === 'shape' ? solveShape(B, shapeState) : solve(B, cov);
+          const path = shapeState ? solveShape(B, shapeState) : solve(B, cov);
           if (!path) {
             if (adds) { addBottle(); await sleep(500); continue }
             toast('Auto could not solve this one, skipping'); advanceLv(); build(); await sleep(700); continue;
@@ -2252,14 +2281,16 @@ const GAME_HTML = `<!DOCTYPE html>
     let lvinEdited = false;
     $('lvin').oninput = () => { lvinEdited = true; };
     function selectMode(nextMode) {
-      mode = nextMode === 'shape' ? 'shape' : 'classic';
+      mode = nextMode === 'shape' ? 'shape' : (nextMode === 'mix' ? 'mix' : 'classic');
       try { localStorage.setItem('ws_mode', mode) } catch (e) { }
       $('m-classic').classList.toggle('on', mode === 'classic');
       $('m-shape').classList.toggle('on', mode === 'shape');
+      if ($('m-mix')) $('m-mix').classList.toggle('on', mode === 'mix');
       if (!lvinEdited) $('lvin').value = curLv();
     }
     $('m-classic').onclick = () => selectMode('classic');
     $('m-shape').onclick = () => selectMode('shape');
+    if ($('m-mix')) $('m-mix').onclick = () => selectMode('mix');
     function selectTheme(nextTheme) {
       theme = nextTheme === 'wood' ? 'wood' : 'cosmic';
       try { localStorage.setItem('ws_theme', theme) } catch (e) { }
