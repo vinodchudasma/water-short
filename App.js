@@ -5,6 +5,9 @@ import { WebView } from 'react-native-webview';
 import { GAME_HTML } from './gameHtml';
 
 const statusBarHeight = Platform.OS === 'android' ? (RNStatusBar.currentHeight || 36) : 0;
+const htmlWithInsets = Platform.OS === 'android'
+  ? GAME_HTML.replace('</head>', `<style>:root{--sat:${statusBarHeight}px;}</style></head>`)
+  : GAME_HTML;
 
 export default function App() {
   if (Platform.OS === 'web') {
@@ -20,11 +23,11 @@ export default function App() {
   }
 
   return (
-    <View style={[styles.container, { paddingTop: statusBarHeight }]}>
+    <View style={styles.container}>
       <StatusBar style="light" translucent backgroundColor="transparent" />
       <WebView
         originWhitelist={['*']}
-        source={{ html: GAME_HTML }}
+        source={{ html: htmlWithInsets }}
         style={styles.webview}
         javaScriptEnabled={true}
         domStorageEnabled={true}

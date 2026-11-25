@@ -17,9 +17,8 @@ const GAME_HTML = `<!DOCTYPE html>
       --btn: #7c3aed;
       --btn2: #a855f7;
       --gold: #ffd23f;
-      box-sizing: border-box;
-      padding-top: env(safe-area-inset-top, 0px);
-      padding-bottom: env(safe-area-inset-bottom, 0px)
+      --sat: env(safe-area-inset-top, 0px);
+      --sab: env(safe-area-inset-bottom, 0px);
     }
 
     * {
@@ -30,6 +29,7 @@ const GAME_HTML = `<!DOCTYPE html>
     }
 
     html, body {
+      width: 100%;
       height: 100%;
       margin: 0;
       padding: 0;
@@ -39,17 +39,53 @@ const GAME_HTML = `<!DOCTYPE html>
     body {
       font-family: 'Fredoka', system-ui, sans-serif;
       color: var(--ink);
-      background: radial-gradient(ellipse at 50% -10%, #2e1a64, #0e0926 55%, #050312 100%);
+      background: linear-gradient(135deg, #06091f, #111c4d, #1f175e, #2b1a6e, #0e2c5c, #070a24);
+      background-size: 400% 400%;
+      animation: bgGradientFlow 10s ease-in-out infinite;
+    }
+
+    @keyframes bgGradientFlow {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+
+    body::before,
+    body::after {
+      content: "";
+      position: fixed;
+      width: 92vmax;
+      height: 92vmax;
+      border-radius: 50%;
+      pointer-events: none;
+      z-index: 0;
+      will-change: transform;
     }
 
     body::before {
-      content: "";
-      position: fixed;
-      inset: 0;
-      background: radial-gradient(circle at 18% 22%, rgba(34, 211, 238, 0.09) 0%, transparent 40%),
-                  radial-gradient(circle at 82% 78%, rgba(244, 114, 182, 0.08) 0%, transparent 45%);
-      pointer-events: none;
-      z-index: 0;
+      top: -32vmax;
+      left: -26vmax;
+      background: radial-gradient(circle, rgba(56, 189, 248, 0.22) 0%, rgba(59, 130, 246, 0.14) 40%, transparent 68%);
+      animation: orbDriftA 11s ease-in-out infinite alternate;
+    }
+
+    body::after {
+      bottom: -32vmax;
+      right: -26vmax;
+      background: radial-gradient(circle, rgba(139, 92, 246, 0.24) 0%, rgba(99, 102, 241, 0.14) 40%, transparent 68%);
+      animation: orbDriftB 13s ease-in-out infinite alternate;
+    }
+
+    @keyframes orbDriftA {
+      0% { transform: translate3d(0, 0, 0) scale(1); }
+      50% { transform: translate3d(34vw, 24vh, 0) scale(1.18); }
+      100% { transform: translate3d(12vw, 48vh, 0) scale(0.95); }
+    }
+
+    @keyframes orbDriftB {
+      0% { transform: translate3d(0, 0, 0) scale(1); }
+      50% { transform: translate3d(-34vw, -24vh, 0) scale(1.2); }
+      100% { transform: translate3d(-12vw, -46vh, 0) scale(0.94); }
     }
 
     #bg-canvas {
@@ -69,7 +105,7 @@ const GAME_HTML = `<!DOCTYPE html>
       flex-direction: column;
       max-width: 620px;
       margin: 0 auto;
-      padding: 16px 16px 18px
+      padding: calc(16px + var(--sat)) 16px calc(18px + var(--sab))
     }
 
     header {
@@ -1286,6 +1322,39 @@ const GAME_HTML = `<!DOCTYPE html>
       const spriteCyan = createBubbleSprite(190);
       const spriteViolet = createBubbleSprite(275);
 
+      function createAuroraSprite(hue, sat, light, alpha) {
+        const sc = document.createElement('canvas');
+        const sz = 128;
+        sc.width = sz;
+        sc.height = sz;
+        const sctx = sc.getContext('2d');
+        const c = sz / 2;
+        const g = sctx.createRadialGradient(c, c, 0, c, c, c);
+        g.addColorStop(0, 'hsla(' + hue + ',' + sat + '%,' + light + '%,' + alpha + ')');
+        g.addColorStop(0.45, 'hsla(' + hue + ',' + sat + '%,' + light + '%,' + (alpha * 0.45) + ')');
+        g.addColorStop(1, 'hsla(' + hue + ',' + sat + '%,' + light + '%,0)');
+        sctx.fillStyle = g;
+        sctx.fillRect(0, 0, sz, sz);
+        return sc;
+      }
+
+      const auroraAqua = createAuroraSprite(196, 94, 56, 0.20);
+      const auroraIndigo = createAuroraSprite(258, 88, 62, 0.28);
+      const auroraBlue = createAuroraSprite(222, 92, 58, 0.26);
+
+      let waveGradA = null, waveGradB = null;
+      function updateWaveGrads() {
+        waveGradA = ctx.createLinearGradient(0, H * 0.25, 0, H);
+        waveGradA.addColorStop(0, 'rgba(56, 189, 248, 0.13)');
+        waveGradA.addColorStop(0.55, 'rgba(99, 102, 241, 0.08)');
+        waveGradA.addColorStop(1, 'rgba(8, 12, 36, 0.02)');
+
+        waveGradB = ctx.createLinearGradient(0, H * 0.45, 0, H);
+        waveGradB.addColorStop(0, 'rgba(139, 92, 246, 0.14)');
+        waveGradB.addColorStop(0.6, 'rgba(59, 130, 246, 0.08)');
+        waveGradB.addColorStop(1, 'rgba(6, 9, 30, 0.02)');
+      }
+
       function resize() {
         dpr = Math.min(window.devicePixelRatio || 1, 1.25);
         W = window.innerWidth;
@@ -1293,26 +1362,41 @@ const GAME_HTML = `<!DOCTYPE html>
         cv.width = Math.round(W * dpr);
         cv.height = Math.round(H * dpr);
         ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        updateWaveGrads();
       }
       resize();
       window.addEventListener('resize', resize);
 
       const isMobile = ('ontouchstart' in window) || (window.innerWidth < 600);
-      const BUBBLE_COUNT = isMobile ? 18 : 28;
+      const BUBBLE_COUNT = isMobile ? 22 : 34;
+      const MOTE_COUNT = isMobile ? 16 : 26;
       const bubbles = [];
+      const motes = [];
       const ripples = [];
 
       for (let i = 0; i < BUBBLE_COUNT; i++) {
         bubbles.push({
           x: Math.random() * W,
           y: Math.random() * H,
-          r: 4 + Math.random() * 12,
-          speed: 0.35 + Math.random() * 0.75,
+          r: 4 + Math.random() * 13,
+          speed: 0.4 + Math.random() * 0.85,
           wobble: Math.random() * Math.PI * 2,
           wobbleSpeed: 0.02 + Math.random() * 0.025,
-          wobbleAmp: 0.35 + Math.random() * 0.55,
-          alpha: 0.25 + Math.random() * 0.45,
-          sprite: Math.random() < 0.65 ? spriteCyan : spriteViolet
+          wobbleAmp: 0.35 + Math.random() * 0.6,
+          alpha: 0.28 + Math.random() * 0.45,
+          sprite: Math.random() < 0.6 ? spriteCyan : spriteViolet
+        });
+      }
+
+      for (let i = 0; i < MOTE_COUNT; i++) {
+        motes.push({
+          x: Math.random() * W,
+          y: Math.random() * H,
+          vx: (Math.random() - 0.5) * 0.25,
+          vy: -0.15 - Math.random() * 0.3,
+          r: 1 + Math.random() * 2,
+          phase: Math.random() * Math.PI * 2,
+          speed: 0.025 + Math.random() * 0.03
         });
       }
 
@@ -1342,8 +1426,53 @@ const GAME_HTML = `<!DOCTYPE html>
         }
       }, { passive: true });
 
-      function loop() {
+      function drawWave(baseY, amp, freq, phase, grad) {
+        ctx.beginPath();
+        ctx.moveTo(0, H);
+        const step = Math.max(24, Math.ceil(W / 18));
+        for (let x = 0; x <= W + step; x += step) {
+          const cx = Math.min(x, W);
+          const y = baseY + Math.sin(cx * freq + phase) * amp + Math.cos(cx * freq * 0.6 - phase * 0.7) * (amp * 0.45);
+          ctx.lineTo(cx, y);
+        }
+        ctx.lineTo(W, H);
+        ctx.closePath();
+        ctx.fillStyle = grad;
+        ctx.fill();
+      }
+
+      function loop(now) {
+        const t = (now || performance.now()) * 0.001;
         ctx.clearRect(0, 0, W, H);
+
+        // Full-display drifting aurora gradient blobs
+        const s1 = Math.max(W, H) * 0.9;
+        const s2 = Math.max(W, H) * 0.85;
+        const s3 = Math.max(W, H) * 0.8;
+        ctx.drawImage(auroraIndigo, W * (0.5 + 0.34 * Math.sin(t * 0.42)) - s1 * 0.5, H * (0.35 + 0.28 * Math.cos(t * 0.31)) - s1 * 0.5, s1, s1);
+        ctx.drawImage(auroraAqua, W * (0.48 + 0.36 * Math.cos(t * 0.36)) - s2 * 0.5, H * (0.62 + 0.28 * Math.sin(t * 0.47)) - s2 * 0.5, s2, s2);
+        ctx.drawImage(auroraBlue, W * (0.52 + 0.32 * Math.sin(t * 0.29 + 2.1)) - s3 * 0.5, H * (0.5 + 0.32 * Math.cos(t * 0.38 + 1.2)) - s3 * 0.5, s3, s3);
+
+        // Full-display flowing liquid gradient waves
+        drawWave(H * 0.42, 28, 0.007, t * 0.9, waveGradA);
+        drawWave(H * 0.68, 34, 0.0055, -t * 0.75 + 1.4, waveGradB);
+
+        // Soft glowing motes across full screen
+        for (let i = 0; i < motes.length; i++) {
+          const m = motes[i];
+          m.x += m.vx;
+          m.y += m.vy;
+          m.phase += m.speed;
+          if (m.y < -10) { m.y = H + 10; m.x = Math.random() * W; }
+          if (m.x < -10) m.x = W + 10;
+          if (m.x > W + 10) m.x = -10;
+          ctx.globalAlpha = 0.2 + 0.45 * (0.5 + 0.5 * Math.sin(m.phase));
+          ctx.fillStyle = '#e0f2fe';
+          ctx.beginPath();
+          ctx.arc(m.x, m.y, m.r, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        ctx.globalAlpha = 1.0;
 
         for (let i = ripples.length - 1; i >= 0; i--) {
           const rp = ripples[i];
