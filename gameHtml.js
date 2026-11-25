@@ -202,6 +202,11 @@ const GAME_HTML = `<!DOCTYPE html>
       margin-top: 24px;
     }
 
+    #board.board-dense {
+      gap: min(20px, calc(var(--bh)*.22));
+      margin-top: 6px;
+    }
+
     #board::before {
       content: "";
       position: absolute;
@@ -737,7 +742,7 @@ const GAME_HTML = `<!DOCTYPE html>
       display: grid;
       place-items: center;
       background: #050210d9;
-      backdrop-filter: blur(4px);
+      backdrop-filter: blur(6px);
       z-index: 60
     }
 
@@ -745,9 +750,189 @@ const GAME_HTML = `<!DOCTYPE html>
       display: none
     }
 
+    #st .card {
+      width: min(90vw, 355px);
+      padding: 26px 22px;
+    }
+
+    .mode-switch {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin: 6px 0 18px;
+    }
+
+    .mode-btn {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      padding: 12px 10px;
+      border-radius: 18px;
+      border: 2px solid rgba(183, 148, 255, 0.25);
+      background: rgba(21, 11, 51, 0.72);
+      color: var(--ink);
+      font-family: inherit;
+      cursor: pointer;
+      transition: transform .15s, border-color .2s, background .2s, box-shadow .2s;
+    }
+
+    .mode-btn:active {
+      transform: scale(0.97);
+    }
+
+    .mode-btn.on {
+      border-color: #38bdf8;
+      background: linear-gradient(160deg, rgba(56, 189, 248, 0.22), rgba(124, 58, 237, 0.34));
+      box-shadow: 0 0 18px rgba(56, 189, 248, 0.32), inset 0 1px 0 rgba(255, 255, 255, 0.28);
+    }
+
+    .mode-ico {
+      font-size: 26px;
+      line-height: 1.1;
+    }
+
+    .mode-name {
+      font-size: 15px;
+      font-weight: 600;
+    }
+
+    .mode-sub {
+      font-size: 11px;
+      color: var(--mute);
+    }
+
+    .mode-btn.on .mode-sub {
+      color: #bae6fd;
+    }
+
+    #board.board-shape {
+      gap: min(16px, calc(var(--bh) * 0.16));
+      margin-top: 8px;
+    }
+
+    .shape-mid-row {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: clamp(12px, 4vw, 24px);
+      width: 100%;
+    }
+
+    .shape-wrap {
+      position: relative;
+      width: var(--sw, 148px);
+      height: var(--sh, 156px);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      touch-action: manipulation;
+      transition: transform .28s cubic-bezier(.3, .7, .3, 1), filter .3s;
+      filter: drop-shadow(0 12px 24px rgba(0, 0, 0, 0.45));
+    }
+
+    .shape-wrap:active {
+      transform: scale(0.97);
+    }
+
+    .shape-wrap.ready {
+      transform: scale(1.04);
+      filter: drop-shadow(0 0 22px var(--scol, rgba(56, 189, 248, 0.75)));
+    }
+
+    .shape-wrap.done {
+      filter: drop-shadow(0 0 24px var(--scol, rgba(255, 210, 63, 0.85)));
+    }
+
+    .shape-wrap svg {
+      width: 100%;
+      height: 100%;
+      overflow: visible;
+      display: block;
+    }
+
+    #shape-liq-wrap {
+      transition: transform var(--d, .45s) cubic-bezier(.45, 0, .3, 1);
+      will-change: transform;
+    }
+
+    .shape-wave-a {
+      animation: waveSlideA 2.8s linear infinite;
+    }
+
+    .shape-wave-b {
+      animation: waveSlideB 4.1s linear infinite;
+    }
+
+    @keyframes waveSlideA {
+      from { transform: translateX(0); }
+      to { transform: translateX(-100px); }
+    }
+
+    @keyframes waveSlideB {
+      from { transform: translateX(-200px); }
+      to { transform: translateX(0); }
+    }
+
+    .shape-bub {
+      animation: shapeBub 3.2s ease-in infinite;
+    }
+
+    @keyframes shapeBub {
+      0% { transform: translateY(0) scale(0.8); opacity: 0; }
+      20% { opacity: 0.55; }
+      85% { opacity: 0.4; }
+      100% { transform: translateY(-76px) scale(1.1); opacity: 0; }
+    }
+
+    .shape-cork {
+      position: absolute;
+      left: 50%;
+      top: 1px;
+      width: 24%;
+      height: 14%;
+      margin-left: -12%;
+      z-index: 4;
+      opacity: 0;
+      transform: translateY(-20px);
+      transition: transform .42s cubic-bezier(.34, 1.35, .64, 1), opacity .2s ease-out;
+      filter: drop-shadow(0 3px 5px rgba(0, 0, 0, .45));
+      pointer-events: none;
+    }
+
+    .shape-cork::before {
+      content: "";
+      position: absolute;
+      left: -2px;
+      right: -2px;
+      top: 0;
+      height: 42%;
+      border-radius: 6px 6px 2px 2px;
+      background: linear-gradient(180deg, #eed2af 0%, #caa06d 45%, #a8733a 100%);
+      box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.75);
+    }
+
+    .shape-cork::after {
+      content: "";
+      position: absolute;
+      left: 3px;
+      right: 3px;
+      top: 40%;
+      height: 60%;
+      border-radius: 0 0 4px 4px;
+      background: linear-gradient(90deg, #945d27 0%, #caa06d 25%, #e5c396 48%, #ba884e 75%, #7a4616 100%);
+    }
+
+    .shape-wrap.done .shape-cork {
+      opacity: 1;
+      transform: translateY(2px);
+    }
+
     #lvin {
       width: 150px;
-      margin: 0 0 20px;
+      margin: 0 0 18px;
       padding: 10px 14px;
       border-radius: 14px;
       border: 2px solid #b794ff66;
@@ -787,7 +972,19 @@ const GAME_HTML = `<!DOCTYPE html>
   <div id="st">
     <div class="card">
       <h2>Water Sort</h2>
-      <p>Enter the level you want to start from</p><input id="lvin" type="number" inputmode="numeric" min="1"
+      <div class="mode-switch" role="group" aria-label="Game mode">
+        <button type="button" class="mode-btn on" id="m-classic">
+          <span class="mode-ico">🧪</span>
+          <span class="mode-name">Classic</span>
+          <span class="mode-sub">Sort bottles</span>
+        </button>
+        <button type="button" class="mode-btn" id="m-shape">
+          <span class="mode-ico">💎</span>
+          <span class="mode-name">Shape Fill</span>
+          <span class="mode-sub">Fill the shape</span>
+        </button>
+      </div>
+      <p id="st-sub">Enter the level you want to start from</p><input id="lvin" type="number" inputmode="numeric" min="1"
         max="99999" value="1" aria-label="Start level"><br><button class="go" id="play">Play</button>
     </div>
   </div>
@@ -805,7 +1002,7 @@ const GAME_HTML = `<!DOCTYPE html>
       <p id="wm"></p>
       <div class="win-stats">
         <div class="win-stat"><span>Moves</span><b id="win-moves">0</b></div>
-        <div class="win-stat"><span>Bottles</span><b id="win-bottles">0</b></div>
+        <div class="win-stat"><span id="win-stat-2-lbl">Bottles</span><b id="win-bottles">0</b></div>
       </div>
       <div class="win-actions">
         <button class="win-replay-btn" id="win-replay" aria-label="Replay level">↻</button>
@@ -821,8 +1018,71 @@ const GAME_HTML = `<!DOCTYPE html>
       '#ec4899', '#84cc16', '#3b82f6', '#a855f7', '#d97706', '#14532d'
     ];
     const CAP = 4, $ = s => document.getElementById(s), sleep = ms => new Promise(r => setTimeout(r, ms));
-    let L = 1, B = [], cov = [], els = [], sel = null, busy = false, hist = [], undos = 5, adds = 2, sound = true, ac = null;
-    try { L = Math.max(1, parseInt(localStorage.getItem('ws_level')) || 1) } catch (e) { }
+    let mode = 'classic', L = 1, SL = 1, B = [], cov = [], els = [], sel = null, busy = false, hist = [], undos = 5, adds = 2, sound = true, ac = null;
+    let shapeState = null;
+    try {
+      L = Math.max(1, parseInt(localStorage.getItem('ws_level')) || 1);
+      SL = Math.max(1, parseInt(localStorage.getItem('ws_shape_level')) || 1);
+      if (localStorage.getItem('ws_mode') === 'shape') mode = 'shape';
+    } catch (e) { }
+    const curLv = () => mode === 'shape' ? SL : L;
+    function setLv(v) {
+      const n = v >= 1 ? Math.min(v, 99999) : 1;
+      if (mode === 'shape') { SL = n; try { localStorage.setItem('ws_shape_level', SL) } catch (e) { } }
+      else { L = n; try { localStorage.setItem('ws_level', L) } catch (e) { } }
+    }
+    function advanceLv() { setLv(curLv() + 1); }
+
+    const SHAPES = [
+      {
+        id: 'flask', name: 'Potion Flask', yMin: 36, yMax: 191,
+        d: 'M76,16 H124 Q129,16 129,23 Q129,30 121,31 L117,33 L117,64 C149,78 168,107 168,140 C168,176 138,196 100,196 C62,196 32,176 32,140 C32,107 51,78 83,64 L83,33 L79,31 Q71,30 71,23 Q71,16 76,16 Z',
+        clipD: 'M86,34 L114,34 L114,66 C145,80 163,108 163,140 C163,172 135,191 100,191 C65,191 37,172 37,140 C37,108 55,80 86,66 Z',
+        specD: 'M48,136 C48,108 64,86 86,74 C72,94 60,114 60,140 C60,156 66,168 74,176 C57,168 48,153 48,136 Z',
+        specR: 'M152,138 C152,158 140,174 124,182 C136,171 144,157 144,138 C144,116 132,96 119,82 C139,96 152,116 152,138 Z',
+        facetD: ''
+      },
+      {
+        id: 'heart', name: 'Crystal Heart', yMin: 32, yMax: 186,
+        d: 'M82,16 H118 Q123,16 123,22 Q123,28 116,29 L113,34 C124,24 142,20 158,30 C180,44 186,74 174,104 C162,134 128,166 100,193 C72,166 38,134 26,104 C14,74 20,44 42,30 C58,20 76,24 87,34 L84,29 Q77,28 77,22 Q77,16 82,16 Z',
+        clipD: 'M88,36 L112,36 C123,27 140,25 154,34 C174,47 179,74 168,102 C157,130 125,160 100,186 C75,160 43,130 32,102 C21,74 26,47 46,34 C60,25 77,27 88,36 Z',
+        specD: 'M38,88 C30,66 36,46 52,38 C60,34 68,36 72,41 C54,48 44,68 49,92 C52,104 59,115 66,125 C52,115 43,103 38,88 Z',
+        specR: 'M162,88 C166,70 163,54 152,44 C160,55 160,72 153,92 C145,115 129,138 112,158 C134,139 154,114 162,88 Z',
+        facetD: ''
+      },
+      {
+        id: 'diamond', name: 'Crystal Gem', yMin: 38, yMax: 189,
+        d: 'M78,16 H122 Q127,16 127,22 Q127,28 120,29 L116,35 L154,52 Q166,58 172,72 L182,95 Q186,104 179,113 L110,191 Q100,200 90,191 L21,113 Q14,104 18,95 L28,72 Q34,58 46,52 L84,35 L80,29 Q73,28 73,22 Q73,16 78,16 Z',
+        clipD: 'M86,36 L114,36 L151,56 Q162,62 167,74 L176,96 Q179,103 173,111 L107,185 Q100,192 93,185 L27,111 Q21,103 24,96 L33,74 Q38,62 49,56 Z',
+        specD: 'M34,98 L44,72 Q48,64 58,60 L72,53 L56,101 L86,166 L36,108 Q32,103 34,98 Z',
+        specR: 'M164,98 L155,74 L144,64 L152,99 L120,160 L162,110 Q166,104 164,98 Z',
+        facetD: 'M27,103 H173 M62,56 L50,103 L100,185 M138,56 L150,103 L100,185'
+      },
+      {
+        id: 'drop', name: 'Aqua Drop', yMin: 32, yMax: 191,
+        d: 'M86,16 H114 Q118,16 118,21 Q118,26 112,27 C124,54 166,100 166,139 C166,174 137,196 100,196 C63,196 34,174 34,139 C34,100 76,54 88,27 Q82,26 82,21 Q82,16 86,16 Z',
+        clipD: 'M91,29 L109,29 C121,57 161,102 161,139 C161,171 134,191 100,191 C66,191 39,171 39,139 C39,102 79,57 91,29 Z',
+        specD: 'M47,138 C47,112 68,80 86,52 C74,84 58,112 58,138 C58,156 66,169 77,178 C58,170 47,156 47,138 Z',
+        specR: 'M152,138 C152,158 140,174 123,182 C136,170 144,156 144,138 C144,116 130,90 118,70 C138,94 152,116 152,138 Z',
+        facetD: ''
+      },
+      {
+        id: 'star', name: 'Star Jar', yMin: 36, yMax: 180,
+        d: 'M82,16 H118 Q123,16 123,22 Q123,28 116,29 L114,42 Q118,62 132,70 L174,80 Q186,83 177,94 L146,123 Q140,129 143,138 L154,177 Q157,189 145,183 L107,160 Q100,156 93,160 L55,183 Q43,189 46,177 L57,138 Q60,129 54,123 L23,94 Q14,83 26,80 L68,70 Q82,62 86,42 L84,29 Q77,28 77,22 Q77,16 82,16 Z',
+        clipD: 'M89,34 L111,34 Q115,65 130,74 L170,84 Q179,86 172,94 L142,121 Q136,128 139,138 L149,174 Q151,182 143,177 L107,155 Q100,151 93,155 L57,177 Q49,182 51,174 L61,138 Q64,128 58,121 L28,94 Q21,86 30,84 L70,74 Q85,65 89,34 Z',
+        specD: 'M34,90 L68,80 Q84,74 88,52 L84,78 Q74,88 38,94 Z',
+        specR: 'M165,92 L138,118 Q131,126 135,140 L143,168 L131,141 Q126,125 134,116 Z',
+        facetD: ''
+      },
+      {
+        id: 'hex', name: 'Hex Prism', yMin: 38, yMax: 189,
+        d: 'M80,16 H120 Q125,16 125,22 Q125,28 118,29 L115,36 L160,60 Q172,67 172,81 L172,143 Q172,157 160,164 L112,191 Q100,198 88,191 L40,164 Q28,157 28,143 L28,81 Q28,67 40,60 L85,36 L82,29 Q75,28 75,22 Q75,16 80,16 Z',
+        clipD: 'M87,37 L113,37 L157,64 Q167,70 167,82 L167,142 Q167,154 157,160 L109,186 Q100,191 91,186 L43,160 Q33,154 33,142 L33,82 Q33,70 43,64 Z',
+        specD: 'M40,84 Q40,74 49,68 L76,52 L52,78 L52,144 L72,166 L44,152 Q40,149 40,141 Z',
+        specR: 'M160,84 L160,141 Q160,149 156,152 L134,164 L152,144 L152,78 L136,60 L153,70 Q160,74 160,84 Z',
+        facetD: 'M52,70 L100,98 L148,70 M100,98 L100,185'
+      }
+    ];
 
     function rng(a) { return () => { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296 } }
     function getAudioCtx() {
@@ -1011,39 +1271,391 @@ const GAME_HTML = `<!DOCTYPE html>
     }
     const full = x => x.length === CAP && x.every(u => u.c === x[0].c && !u.h);
     function solved(b) { return b.every(x => !x.length || full(x)) }
+    const isGameWon = () => mode === 'shape' ? Boolean(shapeState && shapeState.units >= shapeState.cap && solved(B)) : solved(B);
+
+    function paramsShape(l) {
+      const sh = SHAPES[(l - 1) % SHAPES.length];
+      const targetColor = ((l - 1) * 3) % 8;
+      let initUnits, needed, other;
+      if (l <= 2) { initUnits = 1; needed = 4; other = 3; }         // 6 bottles (4 filled), cap 5 -> 1 T/bottle
+      else if (l <= 5) { initUnits = 2; needed = 4; other = 4; }    // 7 bottles (5 filled), cap 6 -> 1 T/bottle
+      else if (l <= 12) { initUnits = 1; needed = 8; other = 4; }   // 8 bottles (6 filled), cap 9 -> isolated single T
+      else if (l <= 24) { initUnits = 2; needed = 8; other = 5; }   // 9 bottles (7 filled), cap 10 -> isolated single T
+      else if (l <= 49) { initUnits = 2; needed = 8; other = 6; }   // 10 bottles (8 filled), cap 10 -> 1 T/bottle
+      else if (l <= 99) { initUnits = 2; needed = 8; other = 7; }   // 11 bottles (9 filled), cap 10 -> 1 T/bottle
+      else if (l <= 199) { initUnits = 2; needed = 12; other = 7; } // 12 bottles (10 filled), cap 14 -> isolated single T
+      else if (l <= 299) { initUnits = 2; needed = 12; other = 8; } // 13 bottles (11 filled), cap 14 -> isolated single T
+      else if (l <= 399) { initUnits = 2; needed = 12; other = 9; } // 14 bottles (12 filled), cap 14 -> 1 T/bottle
+      else if (l < 475) {
+        const extra = Math.floor((l - 400) / 15);
+        initUnits = 3;
+        needed = 16; // 4 target bottles, cap 19
+        other = 9 + extra; // 15..19 bottles (13..17 filled -> mostly/all 1 T/bottle)
+      } else {
+        const extra = Math.floor((l - 475) / 15);
+        initUnits = 3;
+        needed = 20; // 5 target bottles, cap 23 -> strictly 1 T/bottle across 20 separate bottles!
+        other = Math.min(13 + extra, 18); // 5 target + 18 other + 2 empty = 25 bottles max at Lv 550+
+      }
+      const cap = initUnits + needed;
+      const hide = l < 6 ? 0 : Math.min(0.25 + (Math.min(l, 400) / 400) * 0.55, 0.80);
+      return { sh, targetColor, initUnits, needed, cap, other, hide };
+    }
+
+    function solveShape(b0, sh0, maxIt = 200000, maxMs = 2000) {
+      const T = sh0.color, cap = sh0.cap;
+      const st0 = b0.map(x => x.map(u => u.c + (u.h ? 64 : 0)));
+      const k = (s, su) => s.map(x => x.join(',')).sort().join('|') + '#' + su;
+      const done = (s, su) => su >= cap && s.every(x => !x.length || (x.length === CAP && x.every(c => c < 64 && c === x[0])));
+      const H = (s, su) => {
+        let h = (cap - su) * 2.5;
+        for (const x of s) {
+          let i = 1;
+          while (i < x.length && (x[i] & 63) === (x[0] & 63)) i++;
+          h += x.length - i;
+          for (const v of x) if (v >= 64) h += 0.5;
+        }
+        return h;
+      };
+      const N = [{ s: st0, su: sh0.units, p: -1, m: null, g: 0 }];
+      const seen = new Set([k(st0, sh0.units)]);
+      const hp = [[H(st0, sh0.units) * 3, 0]];
+      const push = e => { hp.push(e); let i = hp.length - 1; while (i > 0) { const p = (i - 1) >> 1; if (hp[p][0] <= hp[i][0]) break; [hp[p], hp[i]] = [hp[i], hp[p]]; i = p } };
+      const pop = () => { const t = hp[0], l = hp.pop(); if (hp.length) { hp[0] = l; let i = 0; for (; ;) { const a = 2 * i + 1, c = a + 1; let m = i; if (a < hp.length && hp[a][0] < hp[m][0]) m = a; if (c < hp.length && hp[c][0] < hp[m][0]) m = c; if (m === i) break; [hp[m], hp[i]] = [hp[i], hp[m]]; i = m } } return t };
+      const t0 = performance.now(); let it = 0;
+      while (hp.length) {
+        const id = pop()[1], nd = N[id], s = nd.s, su = nd.su;
+        if (done(s, su)) {
+          const path = [];
+          for (let j = id; N[j].p >= 0; j = N[j].p) if (N[j].m) path.push(N[j].m);
+          return path.reverse();
+        }
+        if (++it > maxIt || (it % 1000 === 0 && performance.now() - t0 > maxMs)) return null;
+        let pouredT = false;
+        for (let a = 0; a < s.length; a++) {
+          const x = s[a]; if (!x.length) continue;
+          if (x[x.length - 1] === T && su < cap) {
+            let n = 0; while (n < x.length && x[x.length - 1 - n] === T && su + n < cap) n++;
+            if (n > 0) {
+              const ns = s.map(z => z.slice());
+              for (let q = 0; q < n; q++) ns[a].pop();
+              if (ns[a].length) ns[a][ns[a].length - 1] &= 63;
+              const nsu = su + n;
+              const kk = k(ns, nsu);
+              if (!seen.has(kk)) {
+                seen.add(kk);
+                N.push({ s: ns, su: nsu, p: id, m: [a, 'shape'], g: nd.g + 1 });
+                push([H(ns, nsu) * 3 + nd.g + 1, N.length - 1]);
+              }
+              pouredT = true;
+              break;
+            }
+          }
+        }
+        if (pouredT) continue;
+        for (let a = 0; a < s.length; a++) {
+          const x = s[a]; if (!x.length) continue;
+          const top = x[x.length - 1];
+          const uni = x.every(c => c === x[0]);
+          if (uni && x.length === CAP) continue;
+          let usedEmpty = false;
+          for (let d = 0; d < s.length; d++) {
+            const y = s[d];
+            if (a === d || y.length >= CAP) continue;
+            if (!y.length) { if (uni || usedEmpty) continue; }
+            else if (y[y.length - 1] !== top) continue;
+            let n = 0; while (n < x.length && x[x.length - 1 - n] === top && y.length + n < CAP) n++;
+            const ns = s.map(z => z.slice());
+            for (let q = 0; q < n; q++) ns[d].push(ns[a].pop());
+            if (ns[a].length) ns[a][ns[a].length - 1] &= 63;
+            const kk = k(ns, su);
+            if (seen.has(kk)) continue;
+            if (!y.length) usedEmpty = true;
+            seen.add(kk);
+            N.push({ s: ns, su, p: id, m: [a, d], g: nd.g + 1 });
+            push([H(ns, su) * 3 + nd.g + 1, N.length - 1]);
+          }
+        }
+      }
+      return null;
+    }
+
+    function genShape(l) {
+      const p = paramsShape(l);
+      const otherCols = [];
+      for (let idx = 1; otherCols.length < p.other && idx <= COL.length; idx++) {
+        const c = (p.targetColor + idx * 5) % COL.length;
+        if (c !== p.targetColor && !otherCols.includes(c)) otherCols.push(c);
+      }
+      const filledCount = (p.needed / CAP) + p.other;
+      const shInit = { id: p.sh.id, name: p.sh.name, cap: p.cap, color: p.targetColor, units: p.initUnits, initUnits: p.initUnits, other: p.other };
+      const minMoves = Math.min(36, Math.max(5, Math.floor(filledCount * 1.4)));
+      let best = null;
+      for (let attempt = 0; attempt < 30; attempt++) {
+        const r = rng(l * 8923 + 37 + attempt * 131);
+        const b = Array.from({ length: filledCount }, () => []);
+        // Place at most 1 T per bottle first (at k=0 or k=1) so T is NEVER stacked [T,T,T]
+        const bottleOrder = Array.from({ length: filledCount }, (_, i) => i);
+        for (let i = bottleOrder.length - 1; i > 0; i--) {
+          const j = Math.floor(r() * (i + 1));
+          const tmp = bottleOrder[i]; bottleOrder[i] = bottleOrder[j]; bottleOrder[j] = tmp;
+        }
+        const tCountPerBottle = new Array(filledCount).fill(0);
+        let placedT = 0;
+        for (const bi of bottleOrder) {
+          if (placedT >= p.needed) break;
+          tCountPerBottle[bi] = 1;
+          placedT++;
+        }
+        // Only if needed > filledCount (small mid-tier levels), add a 2nd separated T
+        for (const bi of bottleOrder) {
+          if (placedT >= p.needed) break;
+          tCountPerBottle[bi]++;
+          placedT++;
+        }
+        const remPool = [];
+        for (const oc of otherCols) for (let k = 0; k < CAP; k++) remPool.push(oc);
+        for (let i = remPool.length - 1; i > 0; i--) {
+          const j = Math.floor(r() * (i + 1));
+          const tmp = remPool[i]; remPool[i] = remPool[j]; remPool[j] = tmp;
+        }
+        let pi = 0;
+        for (let bi = 0; bi < filledCount; bi++) {
+          const tc = tCountPerBottle[bi];
+          if (tc === 1) {
+            // Put single T deep at slot 0 or 1 (slot 0..2 on tutorial l <= 2)
+            const tPos = l <= 2 ? Math.floor(r() * 3) : Math.floor(r() * 2);
+            for (let k = 0; k < CAP; k++) {
+              b[bi].push({ c: k === tPos ? p.targetColor : remPool[pi++], h: false });
+            }
+          } else if (tc === 2) {
+            // Put 2 T units strictly separated: [T, X, T, Y]
+            b[bi].push({ c: p.targetColor, h: false });
+            b[bi].push({ c: remPool[pi++], h: false });
+            b[bi].push({ c: p.targetColor, h: false });
+            b[bi].push({ c: remPool[pi++], h: false });
+          } else {
+            for (let k = 0; k < CAP; k++) b[bi].push({ c: remPool[pi++], h: false });
+          }
+        }
+        b.push([]); b.push([]);
+        if (b.some(x => x.length === CAP && x.every(u => u.c === x[0].c))) continue;
+        if (b.some(x => x.some((u, k) => k > 0 && u.c === p.targetColor && x[k - 1].c === p.targetColor))) continue;
+        if (p.hide > 0) {
+          const hMode = l % 3;
+          b.forEach(x => x.forEach((u, k) => {
+            const ok = k < x.length - 1 && x[k + 1].c !== u.c && (k === 0 || x[k - 1].c !== u.c);
+            const pat = hMode === 0 ? r() < p.hide : hMode === 1 ? true : (x.length - 1 - k) % 2 === 1;
+            u.h = ok && pat;
+          }));
+        }
+        const path = solveShape(b, shInit, 80000, 180);
+        if (path) {
+          best = { b, cv: b.map(() => false), shape: Object.assign({}, shInit), len: path.length };
+          if (path.length >= minMoves) return { b: best.b, cv: best.cv, shape: best.shape };
+        }
+      }
+      if (best) return { b: best.b, cv: best.cv, shape: best.shape };
+      // Guaranteed solvable reverse-pour fallback
+      const r = rng(l * 9973 + 53);
+      const b = [];
+      for (let i = 0; i < p.needed / CAP; i++) b.push(Array.from({ length: CAP }, () => ({ c: p.targetColor, h: false })));
+      for (const oc of otherCols) b.push(Array.from({ length: CAP }, () => ({ c: oc, h: false })));
+      b.push([]); b.push([]);
+      const mixMoves = Math.min(80 + l * 3, 500);
+      for (let i = 0, mv = 0; (mv < mixMoves || solved(b)) && i < 8000; i++) {
+        const a = Math.floor(r() * b.length), d = Math.floor(r() * b.length);
+        if (a === d || !b[a].length || b[d].length >= CAP) continue;
+        const u = b[a][b[a].length - 1], rest = b[a][b[a].length - 2];
+        if (rest && rest.c !== u.c) continue;
+        if (b[d].length && b[d][b[d].length - 1].c === u.c && r() < .85) continue;
+        b[d].push(b[a].pop()); mv++;
+      }
+      if (p.hide > 0) {
+        const hMode = l % 3;
+        b.forEach(x => x.forEach((u, k) => {
+          const ok = k < x.length - 1 && x[k + 1].c !== u.c && (k === 0 || x[k - 1].c !== u.c);
+          const pat = hMode === 0 ? r() < p.hide : hMode === 1 ? true : (x.length - 1 - k) % 2 === 1;
+          u.h = ok && pat;
+        }));
+      }
+      return { b, cv: b.map(() => false), shape: Object.assign({}, shInit) };
+    }
+
+    function buildShapeHtml(sh, colorHex) {
+      const span = sh.yMax - sh.yMin;
+      const wY = sh.yMin;
+      const waveA = 'M0,' + wY + ' Q25,' + (wY - 5) + ' 50,' + wY + ' T100,' + wY + ' T150,' + wY + ' T200,' + wY + ' T250,' + wY + ' T300,' + wY + ' T350,' + wY + ' T400,' + wY + ' V' + (wY + 24) + ' H0 Z';
+      const waveLine = 'M0,' + wY + ' Q25,' + (wY - 5) + ' 50,' + wY + ' T100,' + wY + ' T150,' + wY + ' T200,' + wY + ' T250,' + wY + ' T300,' + wY + ' T350,' + wY + ' T400,' + wY;
+      const waveB = 'M0,' + (wY - 1) + ' Q50,' + (wY + 5) + ' 100,' + (wY - 1) + ' T200,' + (wY - 1) + ' T300,' + (wY - 1) + ' T400,' + (wY - 1) + ' V' + (wY + 24) + ' H0 Z';
+      const facets = sh.facetD ? '<path d="' + sh.facetD + '" fill="none" stroke="rgba(255,255,255,0.16)" stroke-width="1.3" stroke-linecap="round"/>' : '';
+      return ''
+        + '<div class="shape-cork"></div>'
+        + '<svg id="shape-svg" viewBox="0 0 200 210" aria-hidden="true">'
+        + '  <defs>'
+        + '    <clipPath id="shape-clip"><path d="' + sh.clipD + '"/></clipPath>'
+        + '    <linearGradient id="shape-glass-bg" x1="0" y1="0" x2="1" y2="0.2">'
+        + '      <stop offset="0%" stop-color="rgba(255,255,255,0.18)"/>'
+        + '      <stop offset="35%" stop-color="rgba(255,255,255,0.04)"/>'
+        + '      <stop offset="75%" stop-color="rgba(8,6,28,0.22)"/>'
+        + '      <stop offset="100%" stop-color="rgba(255,255,255,0.12)"/>'
+        + '    </linearGradient>'
+        + '    <linearGradient id="shape-liq-3d" x1="0" y1="0" x2="1" y2="0">'
+        + '      <stop offset="0%" stop-color="rgba(255,255,255,0.28)"/>'
+        + '      <stop offset="22%" stop-color="rgba(255,255,255,0.05)"/>'
+        + '      <stop offset="68%" stop-color="rgba(0,0,0,0.02)"/>'
+        + '      <stop offset="100%" stop-color="rgba(0,0,0,0.28)"/>'
+        + '    </linearGradient>'
+        + '    <linearGradient id="shape-glass-sheen" x1="0" y1="0" x2="1" y2="1">'
+        + '      <stop offset="0%" stop-color="rgba(255,255,255,0.20)"/>'
+        + '      <stop offset="30%" stop-color="rgba(255,255,255,0.02)"/>'
+        + '      <stop offset="70%" stop-color="rgba(255,255,255,0)"/>'
+        + '      <stop offset="100%" stop-color="rgba(255,255,255,0.10)"/>'
+        + '    </linearGradient>'
+        + '    <linearGradient id="shape-spec-grad" x1="0" y1="0" x2="0" y2="1">'
+        + '      <stop offset="0%" stop-color="rgba(255,255,255,0.68)"/>'
+        + '      <stop offset="100%" stop-color="rgba(255,255,255,0.08)"/>'
+        + '    </linearGradient>'
+        + '  </defs>'
+        + '  <path d="' + sh.d + '" fill="url(#shape-glass-bg)"/>'
+        + '  <g clip-path="url(#shape-clip)">'
+        + '    <g id="shape-liq-wrap">'
+        + '      <path class="shape-wave-b" d="' + waveB + '" fill="' + colorHex + '" opacity="0.55"/>'
+        + '      <path class="shape-wave-b" d="' + waveB + '" fill="rgba(255,255,255,0.22)"/>'
+        + '      <rect x="0" y="' + (wY + 5) + '" width="200" height="' + (span + 34) + '" fill="' + colorHex + '"/>'
+        + '      <path class="shape-wave-a" d="' + waveA + '" fill="' + colorHex + '"/>'
+        + '      <path class="shape-wave-a" d="' + waveLine + '" fill="none" stroke="rgba(255,255,255,0.68)" stroke-width="2.2" stroke-linecap="round"/>'
+        + '      <circle class="shape-bub" cx="76" cy="' + (wY + 95) + '" r="3.2" fill="rgba(255,255,255,0.45)" style="animation-delay:0s"/>'
+        + '      <circle class="shape-bub" cx="118" cy="' + (wY + 115) + '" r="2.4" fill="rgba(255,255,255,0.4)" style="animation-delay:1.1s"/>'
+        + '      <circle class="shape-bub" cx="95" cy="' + (wY + 130) + '" r="3.8" fill="rgba(255,255,255,0.35)" style="animation-delay:2.1s"/>'
+        + '      <circle class="shape-bub" cx="132" cy="' + (wY + 98) + '" r="2" fill="rgba(255,255,255,0.45)" style="animation-delay:0.6s"/>'
+        + '    </g>'
+        + '    <rect x="0" y="0" width="200" height="210" fill="url(#shape-liq-3d)" pointer-events="none"/>'
+        + '  </g>'
+        + facets
+        + '  <path d="' + sh.clipD + '" fill="none" stroke="rgba(255,255,255,0.24)" stroke-width="1.4" pointer-events="none"/>'
+        + '  <path d="' + sh.d + '" fill="url(#shape-glass-sheen)" stroke="rgba(225,220,255,0.84)" stroke-width="3.2" stroke-linejoin="round" pointer-events="none"/>'
+        + '  <path d="' + sh.specD + '" fill="url(#shape-spec-grad)" pointer-events="none"/>'
+        + '  <path d="' + sh.specR + '" fill="rgba(255,255,255,0.18)" pointer-events="none"/>'
+        + '  <ellipse cx="100" cy="18" rx="18" ry="3.6" fill="rgba(255,255,255,0.20)" stroke="rgba(240,235,255,0.82)" stroke-width="1.6" pointer-events="none"/>'
+        + '</svg>';
+    }
 
     function build() {
-      const g = gen(L); B = g.b; cov = g.cv; hist = []; undos = 5; adds = 2; sel = null; busy = false;
-      $('lv').textContent = 'Level ' + L; $('df').textContent = label(L);
+      hist = []; undos = 5; adds = 2; sel = null; busy = false;
+      const lv = curLv();
+      if (mode === 'shape') {
+        const g = genShape(lv);
+        B = g.b; cov = g.cv; shapeState = g.shape;
+        $('lv').textContent = 'Level ' + lv;
+        $('df').textContent = shapeState.name + (B.length >= 25 ? ' (25 Bottles)' : '');
+      } else {
+        shapeState = null;
+        const g = gen(lv);
+        B = g.b; cov = g.cv;
+        $('lv').textContent = 'Level ' + lv;
+        $('df').textContent = label(lv);
+      }
       render();
+    }
+    function makeBottleEl(i) {
+      const e = document.createElement('div'); e.className = 'bottle'; e.tabIndex = 0; e.setAttribute('role', 'button');
+      e.innerHTML = '<div class="liq">' + '<div class="s"></div>'.repeat(CAP) + '</div><div class="cork"></div><div class="cloth">🔒</div>';
+      e.onclick = () => tap(i); e.onkeydown = ev => { if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); tap(i) } };
+      return e;
     }
     function render() {
       const n = B.length;
-      const rows = n <= 5 ? 1 : (n <= 14 ? 2 : (n <= 21 ? 3 : 4));
-      const perRow = n <= 5 ? n : Math.ceil(n / rows);
       const bd = $('board');
       bd.innerHTML = ''; els = [];
       { const s = $('stream'); s.getAnimations().forEach(x => x.cancel()); s.style.display = 'none'; }
-      const aw = Math.max(300, bd.clientWidth - 16);
-      const ah = Math.max(300, bd.clientHeight - 90);
-      const gapRatio = 0.46;
-      const bwMax = Math.min(52, aw / (perRow + gapRatio * (perRow - 1)));
-      const bhMax = ah / (rows + .32 * (rows - 1));
-      let bw = Math.min(bwMax, bhMax / 2.65);
-      let bh = Math.min(bhMax, bw * 2.65);
-      if (bh < 48) {
-        bh = Math.max(44, bhMax);
-        bw = Math.min(bwMax, bh / 2.5);
+      const aw = Math.max(240, bd.clientWidth - 16);
+      const ah = Math.max(240, bd.clientHeight - (n >= 15 ? 32 : 70));
+      const root = document.documentElement.style;
+      if (mode === 'shape' && shapeState) {
+        bd.classList.remove('board-dense');
+        bd.classList.add('board-shape');
+        const sideCount = n >= 4 ? 2 : 0;
+        const rem = n - sideCount;
+        const topN = Math.ceil(rem / 2);
+        const botN = rem - topN;
+        const topRows = topN === 0 ? 0 : (topN <= 5 ? 1 : Math.ceil(topN / 6));
+        const botRows = botN === 0 ? 0 : (botN <= 5 ? 1 : Math.ceil(botN / 6));
+        const perTop = topRows ? Math.ceil(topN / topRows) : 0;
+        const perBot = botRows ? Math.ceil(botN / botRows) : 0;
+        const totalBRows = Math.max(2, topRows + botRows);
+        const maxPerRow = Math.max(perTop, perBot, 3);
+        const bwByRow = (aw / (maxPerRow + 0.46 * (maxPerRow - 1))) * 0.88;
+        const shapeSize = totalBRows >= 3
+          ? Math.min(168, Math.max(114, Math.min(aw * 0.46, ah * 0.31)))
+          : Math.min(200, Math.max(142, Math.min(aw * 0.54, ah * 0.44)));
+        const bwByMid = sideCount ? (aw - shapeSize - 32) / 2.3 : bwByRow;
+        let bw = Math.min(totalBRows >= 3 ? 33 : 36, bwByRow, bwByMid);
+        const bhMax = (ah - shapeSize * 1.05 - (totalBRows + 1) * 12) / totalBRows;
+        let bh = Math.min(bhMax, bw * 2.55, totalBRows >= 3 ? 80 : 94);
+        if (bh < 42) {
+          bh = Math.max(36, bhMax);
+          bw = Math.min(bw, bh / 2.2);
+        }
+        root.setProperty('--bw', bw + 'px');
+        root.setProperty('--bh', bh + 'px');
+        root.setProperty('--sw', shapeSize + 'px');
+        root.setProperty('--sh', (shapeSize * 1.05) + 'px');
+        root.setProperty('--scol', COL[shapeState.color]);
+
+        let row;
+        for (let i = 0; i < topN; i++) {
+          if (i % perTop === 0) { row = document.createElement('div'); row.className = 'row'; bd.appendChild(row); }
+          const e = makeBottleEl(i); row.appendChild(e); els[i] = e;
+        }
+
+        const midRow = document.createElement('div'); midRow.className = 'shape-mid-row';
+        if (sideCount) {
+          const leftEl = makeBottleEl(topN); midRow.appendChild(leftEl); els[topN] = leftEl;
+        }
+        const shDef = SHAPES.find(s => s.id === shapeState.id) || SHAPES[0];
+        const shWrap = document.createElement('div');
+        shWrap.id = 'shape-wrap';
+        shWrap.className = 'shape-wrap';
+        shWrap.tabIndex = 0;
+        shWrap.setAttribute('role', 'button');
+        shWrap.setAttribute('aria-label', shapeState.name + ' target container');
+        shWrap.innerHTML = buildShapeHtml(shDef, COL[shapeState.color]);
+        shWrap.onclick = tapShape;
+        shWrap.onkeydown = ev => { if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); tapShape() } };
+        midRow.appendChild(shWrap);
+        if (sideCount) {
+          const rightEl = makeBottleEl(topN + 1); midRow.appendChild(rightEl); els[topN + 1] = rightEl;
+        }
+        bd.appendChild(midRow);
+
+        for (let j = 0; j < botN; j++) {
+          const i = topN + sideCount + j;
+          if (j % perBot === 0) { row = document.createElement('div'); row.className = 'row'; bd.appendChild(row); }
+          const e = makeBottleEl(i); row.appendChild(e); els[i] = e;
+        }
+      } else {
+        bd.classList.remove('board-shape');
+        bd.classList.toggle('board-dense', n >= 15);
+        const rows = n <= 5 ? 1 : (n <= 14 ? 2 : (n <= 21 ? 3 : 4));
+        const perRow = n <= 5 ? n : Math.ceil(n / rows);
+        const gapRatio = 0.46;
+        const bwMax = Math.min(52, aw / (perRow + gapRatio * (perRow - 1)));
+        const bhMax = ah / (rows + .32 * (rows - 1));
+        let bw = Math.min(bwMax, bhMax / 2.65);
+        let bh = Math.min(bhMax, bw * 2.65);
+        if (bh < 48) {
+          bh = Math.max(44, bhMax);
+          bw = Math.min(bwMax, bh / 2.5);
+        }
+        root.setProperty('--bw', bw + 'px'); root.setProperty('--bh', bh + 'px');
+        let row;
+        B.forEach((_, i) => {
+          if (i % perRow === 0) { row = document.createElement('div'); row.className = 'row'; bd.appendChild(row) }
+          const e = makeBottleEl(i);
+          row.appendChild(e); els.push(e);
+        });
       }
-      const root = document.documentElement.style; root.setProperty('--bw', bw + 'px'); root.setProperty('--bh', bh + 'px');
-      let row;
-      B.forEach((_, i) => {
-        if (i % perRow === 0) { row = document.createElement('div'); row.className = 'row'; bd.appendChild(row) }
-        const e = document.createElement('div'); e.className = 'bottle'; e.tabIndex = 0; e.setAttribute('role', 'button');
-        e.innerHTML = '<div class="liq">' + '<div class="s"></div>'.repeat(CAP) + '</div><div class="cork"></div><div class="cloth">🔒</div>';
-        e.onclick = () => tap(i); e.onkeydown = ev => { if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); tap(i) } };
-        row.appendChild(e); els.push(e);
-      });
       sync();
     }
     function sync(skipBottleIdx = -1) {
@@ -1065,13 +1677,34 @@ const GAME_HTML = `<!DOCTYPE html>
       $('unc').textContent = undos; $('abc').textContent = adds;
       $('un').parentNode.classList.toggle('off', !hist.length || !undos);
       $('ab').parentNode.classList.toggle('off', !adds || B.length >= 25);
-      const totalColors = Math.max(1, params(L).colors);
-      const doneColors = B.filter(full).length;
-      const pct = Math.min(100, Math.round((doneColors / totalColors) * 100));
-      if ($('lvl-prog-fill')) $('lvl-prog-fill').style.width = pct + '%';
-      if ($('lvl-prog-txt')) $('lvl-prog-txt').textContent = pct + '%';
+      if (mode === 'shape' && shapeState) {
+        const shDef = SHAPES.find(s => s.id === shapeState.id) || SHAPES[0];
+        const frac = Math.min(1, shapeState.units / shapeState.cap);
+        const offsetY = (1 - frac) * (shDef.yMax - shDef.yMin);
+        const liqEl = $('shape-liq-wrap');
+        if (liqEl) liqEl.style.transform = 'translateY(' + offsetY.toFixed(2) + 'px)';
+        const shWrap = $('shape-wrap');
+        if (shWrap) {
+          shWrap.classList.toggle('done', shapeState.units >= shapeState.cap);
+          shWrap.classList.toggle('ready', skipBottleIdx !== -2 && sel !== null && canPourToShape(sel));
+        }
+        const shapeDone = Math.max(0, shapeState.units - shapeState.initUnits);
+        const shapeNeed = Math.max(1, shapeState.cap - shapeState.initUnits);
+        const totalGoal = shapeNeed + shapeState.other * CAP;
+        const doneOtherUnits = B.filter(b => full(b) && b[0].c !== shapeState.color).length * CAP;
+        const pct = Math.min(100, Math.round(((shapeDone + doneOtherUnits) / totalGoal) * 100));
+        if ($('lvl-prog-fill')) $('lvl-prog-fill').style.width = pct + '%';
+        if ($('lvl-prog-txt')) $('lvl-prog-txt').textContent = pct + '%';
+      } else {
+        const totalColors = Math.max(1, params(L).colors);
+        const doneColors = B.filter(full).length;
+        const pct = Math.min(100, Math.round((doneColors / totalColors) * 100));
+        if ($('lvl-prog-fill')) $('lvl-prog-fill').style.width = pct + '%';
+        if ($('lvl-prog-txt')) $('lvl-prog-txt').textContent = pct + '%';
+      }
     }
     const canPour = (a, b) => a !== b && B[a].length && B[b].length < CAP && !cov[a] && !cov[b] && (!B[b].length || B[b][B[b].length - 1].c === B[a][B[a].length - 1].c);
+    const canPourToShape = a => mode === 'shape' && shapeState && a !== null && a >= 0 && B[a] && B[a].length && !cov[a] && B[a][B[a].length - 1].c === shapeState.color && shapeState.units < shapeState.cap;
     function unlockCheck() {
       let o = false;
       cov.forEach((q, i) => {
@@ -1086,8 +1719,11 @@ const GAME_HTML = `<!DOCTYPE html>
       return o;
     }
     function hasMove() {
-      for (let a = 0; a < B.length; a++)for (let b = 0; b < B.length; b++)
-        if (canPour(a, b) && !(B[b].length === 0 && B[a].every(u => u.c === B[a][0].c))) return true;
+      for (let a = 0; a < B.length; a++) {
+        if (canPourToShape(a)) return true;
+        for (let b = 0; b < B.length; b++)
+          if (canPour(a, b) && !(B[b].length === 0 && B[a].every(u => u.c === B[a][0].c))) return true;
+      }
       return false;
     }
 
@@ -1101,9 +1737,81 @@ const GAME_HTML = `<!DOCTYPE html>
       if (B[i].length && !cov[i]) { sel = i; sync() }
     }
 
+    function tapShape() {
+      if (busy || mode !== 'shape' || !shapeState) return;
+      if (sel === null) {
+        sfxTap(520);
+        toast('Select a bottle with the matching color to fill the ' + shapeState.name + '!');
+        return;
+      }
+      if (canPourToShape(sel)) {
+        pourToShape(sel);
+        return;
+      }
+      const shWrap = $('shape-wrap');
+      if (shWrap) { shWrap.classList.remove('shake'); void shWrap.offsetWidth; shWrap.classList.add('shake'); }
+      sfxTap(240);
+      toast('Only the matching color can fill this ' + shapeState.name + '!');
+    }
+
+    async function pourToShape(a) {
+      busy = true;
+      hist.push({ B: JSON.parse(JSON.stringify(B)), cov: cov.slice(), shapeUnits: shapeState.units });
+      const ea = els[a], shEl = $('shape-wrap'), ra = ea.getBoundingClientRect(), rb = shEl.getBoundingClientRect();
+      const ah = ra.height, aw = ra.width, bcx = rb.left + rb.width / 2, side = bcx - .5 * ah > 8 ? -1 : 1;
+      const c = shapeState.color, color = COL[c];
+      let n = 0; while (n < B[a].length && B[a][B[a].length - 1 - n].c === c && !B[a][B[a].length - 1 - n].h && shapeState.units + n < shapeState.cap) n++;
+      const acx = ra.left + ra.width / 2, acy = ra.top + ra.height / 2 + 16, R = t => t * Math.PI / 180;
+      const mouthY = rb.top + rb.height * 0.085;
+      const myf = t => mouthY - 12 - ah * Math.cos(R(t)) - (aw / 2) * Math.sin(R(t)), py = t => myf(t) + .5 * ah * Math.cos(R(t)) - acy;
+      const pose = t => 'translate(' + (bcx + side * .5 * ah * Math.sin(R(t)) - acx) + 'px,' + py(t) + 'px) rotate(' + (-side * t) + 'deg)';
+      const mv = 750 * SP, pd = (950 + n * 300) * SP, rt = 650 * SP, T = mv + pd + rt, E = 'cubic-bezier(.45,0,.2,1)';
+      sel = null; ea.classList.remove('sel'); ea.style.transition = 'none'; ea.style.zIndex = 20;
+      shEl.classList.remove('ready');
+      const st = $('stream'); st.getAnimations().forEach(x => x.cancel());
+      const surf = rb.top + rb.height * (0.89 - ((shapeState.units + n / 2) / shapeState.cap) * 0.70);
+      const m0 = myf(52), m1 = myf(88);
+      st.style.cssText = 'background:' + color + ';left:' + (bcx - 3.5) + 'px;top:' + m0 + 'px;height:' + Math.max(8, surf - m0) + 'px';
+      document.documentElement.style.setProperty('--d', (pd * .8) + 'ms');
+      const wy = Math.min(py(52), -28);
+      ea.animate([{ transform: 'translateY(-16px)', easing: E }, { transform: 'translate(0px,' + wy + 'px)', offset: .45 * mv / T, easing: E }, { transform: pose(52), offset: mv / T, easing: 'linear' }, { transform: pose(70), offset: (mv + pd * .45) / T, easing: 'linear' }, { transform: pose(88), offset: (mv + pd) / T, easing: E }, { transform: 'translate(0px,' + wy + 'px)', offset: (mv + pd + rt * .5) / T, easing: E }, { transform: 'none' }], { duration: T });
+      await sleep(mv - 60);
+      st.style.display = 'block';
+      st.animate([{ clipPath: 'inset(0 0 100% 0)' }, { clipPath: 'inset(0)' }], { duration: 180, easing: 'ease-in', fill: 'forwards' });
+      st.animate([{ top: m0 + 'px', height: Math.max(8, surf - m0) + 'px' }, { top: m1 + 'px', height: Math.max(8, surf - m1) + 'px' }], { duration: pd * .8, delay: 60, easing: 'linear', fill: 'both' });
+
+      sfxPour((pd * .8) / 1000, Math.min(4, shapeState.units));
+      await sleep(120);
+      for (let k = 0; k < n; k++) B[a].pop();
+      shapeState.units += n;
+      sync(-2);
+      await sleep(pd * .8 - 100);
+      st.animate([{ clipPath: 'inset(0)' }, { clipPath: 'inset(100% 0 0 0)' }], { duration: 200, easing: 'ease-out', fill: 'forwards' });
+      await sleep(T - (mv + 60 + pd * .8 - 100) + 30);
+      ea.style.transition = ''; ea.style.zIndex = '';
+      st.getAnimations().forEach(x => x.cancel()); st.style.display = 'none';
+
+      const shapeJustFilled = shapeState.units >= shapeState.cap;
+      if (shapeJustFilled) sfxCork();
+      if (isGameWon()) {
+        sync();
+        return win();
+      }
+      busy = false;
+      let added = false;
+      if (!hasMove() && adds > 0) {
+        addBottle();
+        added = true;
+      }
+      sync();
+      if (added) { toast('No moves left, added an extra bottle!'); sfxDrop(420, 0.06) }
+      else if (shapeJustFilled) { toast(shapeState.name + ' filled! Now complete the bottles.'); }
+      if (!hasMove()) toast('No moves left. Undo or restart level.');
+    }
+
     async function pour(a, b) {
       busy = true;
-      hist.push({ B: JSON.parse(JSON.stringify(B)), cov: cov.slice() });
+      hist.push({ B: JSON.parse(JSON.stringify(B)), cov: cov.slice(), shapeUnits: shapeState ? shapeState.units : 0 });
       const ea = els[a], eb = els[b], ra = ea.getBoundingClientRect(), rb = eb.getBoundingClientRect();
       const h = rb.height, bcx = rb.left + rb.width / 2, side = bcx - .5 * h > 8 ? -1 : 1;
       const c = B[a][B[a].length - 1].c, color = COL[c];
@@ -1137,7 +1845,7 @@ const GAME_HTML = `<!DOCTYPE html>
 
       if (full(B[b])) sfxCork();
       const opened = unlockCheck();
-      if (solved(B)) {
+      if (isGameWon()) {
         sync();
         return win();
       }
@@ -1150,12 +1858,17 @@ const GAME_HTML = `<!DOCTYPE html>
       sync();
       if (added) { toast('No moves left, added an extra bottle!'); sfxDrop(420, 0.06) }
       else if (opened) { toast('Bottle unlocked'); sfxDrop(680, 0.06) }
+      else if (mode === 'shape' && shapeState && solved(B) && shapeState.units < shapeState.cap) {
+        toast('Now pour the matching color into the ' + shapeState.name + '!');
+      }
       if (!hasMove()) toast('No moves left. Undo or restart level.');
     }
 
     function undo() {
       if (busy || !hist.length || !undos) return;
-      const h = hist.pop(); B = h.B; cov = h.cov; undos--; sel = null;
+      const h = hist.pop(); B = h.B; cov = h.cov;
+      if (mode === 'shape' && shapeState && h.shapeUnits !== undefined) shapeState.units = h.shapeUnits;
+      undos--; sel = null;
       sfxTap(520);
       render();
     }
@@ -1184,26 +1897,34 @@ const GAME_HTML = `<!DOCTYPE html>
       var t0 = performance.now();
     }
     async function win() {
-      const winLevel = L;
+      const winLevel = curLv(), winMode = mode;
       confetti();
       busy = true; sfxWin();
-      try { localStorage.setItem('ws_level', L + 1) } catch (e) { }
-      if ($('win-lvl-text')) $('win-lvl-text').textContent = 'Level ' + L + ' Cleared!';
+      setLv(winLevel + 1);
+      if ($('win-lvl-text')) $('win-lvl-text').textContent = 'Level ' + winLevel + ' Cleared!';
       if ($('win-moves')) $('win-moves').textContent = hist.length;
-      if ($('win-bottles')) $('win-bottles').textContent = params(L).colors;
-      $('wm').textContent = label(L + 1) == label(L) ? 'Level ' + (L + 1) + ' is waiting for you' : 'Unlocking ' + label(L + 1).toLowerCase() + ' mode on Level ' + (L + 1);
+      if (winMode === 'shape' && shapeState) {
+        if ($('win-stat-2-lbl')) $('win-stat-2-lbl').textContent = 'Shape';
+        if ($('win-bottles')) $('win-bottles').textContent = shapeState.name;
+        const nextShape = SHAPES[winLevel % SHAPES.length].name;
+        $('wm').textContent = 'Next: Fill ' + nextShape + ' on Level ' + (winLevel + 1);
+      } else {
+        if ($('win-stat-2-lbl')) $('win-stat-2-lbl').textContent = 'Bottles';
+        if ($('win-bottles')) $('win-bottles').textContent = params(winLevel).colors;
+        $('wm').textContent = label(winLevel + 1) == label(winLevel) ? 'Level ' + (winLevel + 1) + ' is waiting for you' : 'Unlocking ' + label(winLevel + 1).toLowerCase() + ' mode on Level ' + (winLevel + 1);
+      }
       await sleep(400);
       $('win').classList.add('on');
       if (auto) {
         await sleep(2200);
-        if (auto && L === winLevel && $('win').classList.contains('on')) {
+        if (auto && mode === winMode && $('win').classList.contains('on')) {
           $('win').classList.remove('on');
-          L++; build();
+          build();
         }
       }
     }
-    $('nx').onclick = () => { $('win').classList.remove('on'); L++; build() };
-    $('win-replay').onclick = () => { $('win').classList.remove('on'); build() };
+    $('nx').onclick = () => { $('win').classList.remove('on'); build() };
+    $('win-replay').onclick = () => { $('win').classList.remove('on'); setLv(Math.max(1, curLv() - 1)); build() };
     $('un').onclick = undo; $('ab').onclick = addBottle;
     window.addEventListener('resize', () => { if (!busy) render() });
     let SP = 1.42, auto = false, running = false;
@@ -1248,19 +1969,20 @@ const GAME_HTML = `<!DOCTYPE html>
         while (auto) {
           const on = $('win').classList.contains('on');
           if (on) { $('nx').click(); await sleep(400); continue }
-          if (solved(B) || busy) { await sleep(100); continue }
-          const path = solve(B, cov);
+          if (isGameWon() || busy) { await sleep(100); continue }
+          const path = mode === 'shape' ? solveShape(B, shapeState) : solve(B, cov);
           if (!path) {
             if (adds) { addBottle(); await sleep(500); continue }
-            toast('Auto could not solve this one, skipping'); L++; build(); await sleep(700); continue;
+            toast('Auto could not solve this one, skipping'); advanceLv(); build(); await sleep(700); continue;
           }
-          const curL = L;
+          const curM = mode, curLVal = curLv();
           for (const [a, b] of path) {
-            if (!auto || L !== curL) break;
-            while (busy && !solved(B)) await sleep(40);
-            if (!auto || L !== curL || solved(B)) break;
+            if (!auto || mode !== curM || curLv() !== curLVal) break;
+            while (busy && !isGameWon()) await sleep(40);
+            if (!auto || mode !== curM || curLv() !== curLVal || isGameWon()) break;
             sel = null;
-            pour(a, b);
+            if (b === 'shape') pourToShape(a);
+            else pour(a, b);
             while (busy) await sleep(40);
             await sleep(80);
           }
@@ -1271,15 +1993,27 @@ const GAME_HTML = `<!DOCTYPE html>
       auto = !auto; this.classList.toggle('on', auto); SP = auto ? 1.15 : 1.42;
       if (auto) { sel = null; sync(); run() }
     };
+    let lvinEdited = false;
+    $('lvin').oninput = () => { lvinEdited = true; };
+    function selectMode(nextMode) {
+      mode = nextMode === 'shape' ? 'shape' : 'classic';
+      try { localStorage.setItem('ws_mode', mode) } catch (e) { }
+      $('m-classic').classList.toggle('on', mode === 'classic');
+      $('m-shape').classList.toggle('on', mode === 'shape');
+      if (!lvinEdited) $('lvin').value = curLv();
+    }
+    $('m-classic').onclick = () => selectMode('classic');
+    $('m-shape').onclick = () => selectMode('shape');
     function openStart() {
       auto = false; $('au').classList.remove('on'); SP = 1.42;
-      $('lvin').value = L; $('st').classList.remove('off');
+      lvinEdited = false;
+      selectMode(mode);
+      $('st').classList.remove('off');
       setTimeout(() => { $('lvin').focus(); $('lvin').select() }, 50);
     }
     function startGame() {
       const v = Math.floor(Number($('lvin').value));
-      L = v >= 1 ? Math.min(v, 99999) : 1;
-      try { localStorage.setItem('ws_level', L) } catch (e) { }
+      setLv(v);
       $('st').classList.add('off'); $('win').classList.remove('on');
       build();
     }
