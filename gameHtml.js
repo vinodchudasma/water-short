@@ -2199,10 +2199,12 @@ const GAME_HTML = `<!DOCTYPE html>
         }
       }
       await sleep(400);
+      const winAt = performance.now();
+      winShownAt = winAt;
       $('win').classList.add('on');
       if (auto) {
-        await sleep(2200);
-        if (auto && mode === winMode && $('win').classList.contains('on')) {
+        await sleep(4000);
+        if (auto && mode === winMode && winShownAt === winAt && $('win').classList.contains('on')) {
           $('win').classList.remove('on');
           build();
         }
@@ -2212,7 +2214,7 @@ const GAME_HTML = `<!DOCTYPE html>
     $('win-replay').onclick = () => { $('win').classList.remove('on'); setLv(Math.max(1, curLv() - 1)); build() };
     $('un').onclick = undo; $('ab').onclick = addBottle;
     window.addEventListener('resize', () => { if (!busy) render() });
-    let SP = 1.42, auto = false, running = false;
+    let SP = 1.42, auto = false, running = false, winShownAt = 0;
     function solve(b0, cv0) {
       const st0 = b0.map(x => x.map(u => u.c + (u.h ? 64 : 0))), anyC = cv0.some(Boolean), cs = v => v.map(q => q ? 1 : 0).join('');
       const k = (s, v) => (anyC ? s.map(x => x.join(',')) : s.map(x => x.join(',')).sort()).join('|') + '#' + cs(v);
@@ -2250,26 +2252,95 @@ const GAME_HTML = `<!DOCTYPE html>
     }
     async function run() {
       if (running) return; running = true;
+      const rand = (lo, hi) => lo + Math.random() * (hi - lo);
+      async function humanWait(ms, curM, curLVal) {
+        const end = performance.now() + ms;
+        while (performance.now() < end) {
+          if (!auto || mode !== curM || curLv() !== curLVal || isGameWon()) return false;
+          await sleep(Math.min(50, Math.max(10, end - performance.now())));
+        }
+        return auto && mode === curM && curLv() === curLVal && !isGameWon();
+      }
+      function pickHesitateBottle(targetA) {
+        const cands = [];
+        for (let i = 0; i < B.length; i++) {
+          if (i !== targetA && B[i].length && !cov[i] && !full(B[i])) cands.push(i);
+        }
+        return cands.length ? cands[Math.floor(Math.random() * cands.length)] : -1;
+      }
       try {
         while (auto) {
           const on = $('win').classList.contains('on');
-          if (on) { $('nx').click(); await sleep(400); continue }
+          if (on) {
+            if (performance.now() - winShownAt >= 4000) { $('nx').click(); await sleep(450); }
+            else await sleep(120);
+            continue;
+          }
           if (isGameWon() || busy) { await sleep(100); continue }
           const path = shapeState ? solveShape(B, shapeState) : solve(B, cov);
           if (!path) {
-            if (adds) { addBottle(); await sleep(500); continue }
+            if (adds) { addBottle(); await sleep(550); continue }
             toast('Auto could not solve this one, skipping'); advanceLv(); build(); await sleep(700); continue;
           }
           const curM = mode, curLVal = curLv();
+          // Natural board-reading pause at start of a level before first tap
+          if (!(await humanWait(rand(520, 920), curM, curLVal))) {
+            if (!auto && !busy && sel !== null) { sel = null; sync(); }
+            continue;
+          }
+          let moveCount = 0;
+          let nextHesitateAt = B.length >= 8 ? Math.floor(rand(10, 18)) : 999;
+          let nextScanAt = Math.floor(rand(4, 8));
           for (const [a, b] of path) {
             if (!auto || mode !== curM || curLv() !== curLVal) break;
             while (busy && !isGameWon()) await sleep(40);
             if (!auto || mode !== curM || curLv() !== curLVal || isGameWon()) break;
-            sel = null;
+
+            // Occasional human hesitation: lift another bottle, hold up while thinking, put down, then pick real one
+            if (moveCount >= nextHesitateAt && B.length >= 8) {
+              nextHesitateAt = moveCount + Math.floor(rand(13, 21));
+              const alt = pickHesitateBottle(a);
+              if (alt >= 0) {
+                sel = alt; sfxTap(640); sync();
+                if (!(await humanWait(rand(1050, 1550), curM, curLVal))) {
+                  if (!auto && !busy) { sel = null; sync(); }
+                  break;
+                }
+                sel = null; sfxTap(480); sync();
+                if (!(await humanWait(rand(480, 760), curM, curLVal))) break;
+              }
+            }
+
+            // Step 1: Tap source bottle and wait for full lift + natural aim pause
+            sel = a; sfxTap(640); sync();
+            const aimMs = b === 'shape' ? rand(420, 620) : rand(460, 720);
+            if (!(await humanWait(aimMs, curM, curLVal))) {
+              if (!auto && !busy) { sel = null; sync(); }
+              break;
+            }
+
+            // Step 2: Execute pour onto destination bottle or Shape
             if (b === 'shape') pourToShape(a);
             else pour(a, b);
-            while (busy) await sleep(40);
-            await sleep(80);
+            while (busy && !isGameWon() && !$('win').classList.contains('on')) await sleep(40);
+            moveCount++;
+
+            if (!auto || mode !== curM || curLv() !== curLVal || isGameWon() || $('win').classList.contains('on')) break;
+            // Variable human thinking delay instead of uniform 80ms
+            const packed = b !== 'shape' && B[b] && full(B[b]);
+            let thinkMs;
+            if (packed || moveCount >= nextScanAt) {
+              nextScanAt = moveCount + Math.floor(rand(4, 8));
+              thinkMs = rand(650, 1250);
+            } else if (B.length >= 14 && Math.random() < 0.24) {
+              thinkMs = rand(520, 920);
+            } else {
+              thinkMs = rand(210, 460);
+            }
+            if (!(await humanWait(thinkMs, curM, curLVal))) {
+              if (!auto && !busy && sel !== null) { sel = null; sync(); }
+              break;
+            }
           }
         }
       } finally { running = false }
