@@ -1177,10 +1177,14 @@ const GAME_HTML = `<!DOCTYPE html>
     function advanceLv() { setLv(curLv() + 1); }
     const mixStep = lv => (lv - 1) % 3;
     function resolveShapeForLevel(lv, m = mode) {
-      if (m === 'shape') return SHAPES[(lv - 1) % SHAPES.length];
+      if (m === 'shape') {
+        const slot = (lv - 1) % SHAPES.length;
+        if (slot === 0) return PIPE_SHAPES[Math.floor((lv - 1) / SHAPES.length) % PIPE_SHAPES.length];
+        return SHAPES[slot];
+      }
       if (m === 'mix') {
         const st = mixStep(lv);
-        if (st === 1) return SHAPES[0];
+        if (st === 1) return PIPE_SHAPES[Math.floor((lv - 1) / 3) % PIPE_SHAPES.length];
         if (st === 2) {
           const nonPipe = SHAPES.slice(1);
           return nonPipe[Math.floor((lv - 1) / 3) % nonPipe.length];
@@ -1189,16 +1193,84 @@ const GAME_HTML = `<!DOCTYPE html>
       return null;
     }
 
-    const SHAPES = [
+    const PIPE_SHAPES = [
       {
-        id: 'pipe', name: 'Pipe Lab', yMin: 29, yMax: 190.5, mouthX: 0.22, mouthY: 0.08, corkRx: 11.8,
-        d: 'M27,15 H61 Q66,15 66,20 Q66,25 60,26 L60,45 L90,45 Q108,45 108,63 L108,86 L138,86 Q156,86 156,104 L156,126 A35,35 0 1,1 132,126 L132,112 Q132,108 128,108 L108,108 L108,132 Q108,142 90,142 Q72,142 72,132 L72,71 Q72,67 68,67 L60,67 L60,80 Q60,89 44,89 Q28,89 28,80 L28,26 Q22,25 22,20 Q22,15 27,15 Z',
-        clipD: 'M31.5,27 H56.5 V48.5 H90 Q104.5,48.5 104.5,63 V89.5 H138 Q152.5,89.5 152.5,104 V128.7 A31.5,31.5 0 1,1 135.5,128.7 V112 Q135.5,104.5 128,104.5 H104.5 V132 Q104.5,138.5 90,138.5 Q75.5,138.5 75.5,132 V71 Q75.5,63.5 68,63.5 H56.5 V80 Q56.5,85.5 44,85.5 Q31.5,85.5 31.5,80 Z',
-        specD: 'M34,32 H40 V78 Q36,80 34,74 Z M78,68 H83 V130 Q79,132 78,125 Z M116,158 C116,142 125,131 136,128 C128,136 123,147 123,160 C123,170 127,179 133,184 C121,180 116,170 116,158 Z',
-        specR: 'M160,134 C169,140 174,151 172,165 C170,175 163,182 154,186 C162,179 166,171 167,160 C168,149 165,140 160,134 Z M68,48 H91 Q101,48 103,56 Q98,52 90,52 H68 Z M114,89 H139 Q149,89 151,97 Q146,93 138,93 H114 Z',
-        flowD: 'M44,22 V48 Q44,56 52,56 H82 Q90,56 90,64 V89 Q90,97 98,97 H136 Q144,97 144,105 V188',
-        facetD: ''
+        id: 'pipe_s', name: 'Pipe Lab', isPipe: true, yMin: 28, yMax: 186.5, mouthX: 0.21, mouthY: 0.08, corkRx: 10.4,
+        tubeD: 'M51,52 H122 Q138,52 138,68 V74 Q138,90 122,90 H88 Q72,90 72,106 V110 Q72,124 88,124 H134 Q148,124 148,138',
+        flowD: 'M42,22 V52 H122 Q138,52 138,68 V74 Q138,90 122,90 H88 Q72,90 72,106 V110 Q72,124 88,124 H134 Q148,124 148,138 V184'
       },
+      {
+        id: 'pipe_arch', name: 'Pipe Lab', isPipe: true, yMin: 28, yMax: 186.5, mouthX: 0.21, mouthY: 0.08, corkRx: 10.4,
+        tubeD: 'M51,64 C68,26 148,22 148,88 V138',
+        flowD: 'M42,22 V64 H51 C68,26 148,22 148,88 V184'
+      },
+      {
+        id: 'pipe_switch', name: 'Pipe Lab', isPipe: true, yMin: 28, yMax: 186.5, mouthX: 0.21, mouthY: 0.08, corkRx: 10.4,
+        tubeD: 'M51,42 H122 C138,42 138,68 122,68 H82 C66,68 66,94 82,94 H134 Q148,94 148,112 V138',
+        flowD: 'M42,22 V42 H122 C138,42 138,68 122,68 H82 C66,68 66,94 82,94 H134 Q148,94 148,112 V184'
+      },
+      {
+        id: 'pipe_slide', name: 'Pipe Lab', isPipe: true, yMin: 28, yMax: 186.5, mouthX: 0.21, mouthY: 0.08, corkRx: 10.4,
+        tubeD: 'M51,46 H80 C102,46 100,82 122,82 C142,82 148,98 148,136',
+        flowD: 'M42,22 V46 H80 C102,46 100,82 122,82 C142,82 148,98 148,136 V184'
+      },
+      {
+        id: 'pipe_zigzag', name: 'Pipe Lab', isPipe: true, yMin: 28, yMax: 186.5, mouthX: 0.21, mouthY: 0.08, corkRx: 10.4,
+        tubeD: 'M51,44 H128 L76,98 H134 Q148,98 148,116 V136',
+        flowD: 'M42,22 V44 H128 L76,98 H134 Q148,98 148,116 V184'
+      },
+      {
+        id: 'pipe_wave', name: 'Pipe Lab', isPipe: true, yMin: 28, yMax: 186.5, mouthX: 0.21, mouthY: 0.08, corkRx: 10.4,
+        tubeD: 'M51,64 Q68,36 84,64 Q100,92 116,64 Q132,36 144,64 Q148,78 148,136',
+        flowD: 'M42,22 V64 H51 Q68,36 84,64 Q100,92 116,64 Q132,36 144,64 Q148,78 148,136 V184'
+      },
+      {
+        id: 'pipe_uloop', name: 'Pipe Lab', isPipe: true, yMin: 28, yMax: 186.5, mouthX: 0.21, mouthY: 0.08, corkRx: 10.4,
+        tubeD: 'M42,74 V118 C42,146 92,146 92,114 V66 C92,36 148,36 148,72 V136',
+        flowD: 'M42,22 V118 C42,146 92,146 92,114 V66 C92,36 148,36 148,72 V184'
+      },
+      {
+        id: 'pipe_spiral', name: 'Pipe Lab', isPipe: true, yMin: 28, yMax: 186.5, mouthX: 0.21, mouthY: 0.08, corkRx: 10.4,
+        tubeD: 'M51,48 C96,28 134,58 100,82 C66,106 102,136 148,118 L148,136',
+        flowD: 'M42,22 V48 H51 C96,28 134,58 100,82 C66,106 102,136 148,118 L148,184'
+      },
+      {
+        id: 'pipe_steps', name: 'Pipe Lab', isPipe: true, yMin: 28, yMax: 186.5, mouthX: 0.21, mouthY: 0.08, corkRx: 10.4,
+        tubeD: 'M51,42 H80 Q90,42 90,52 V68 Q90,78 100,78 H114 Q124,78 124,88 V104 Q124,114 134,114 H140 Q148,114 148,124 V136',
+        flowD: 'M42,22 V42 H80 Q90,42 90,52 V68 Q90,78 100,78 H114 Q124,78 124,88 V104 Q124,114 134,114 H140 Q148,114 148,124 V184'
+      },
+      {
+        id: 'pipe_double_u', name: 'Pipe Lab', isPipe: true, yMin: 28, yMax: 186.5, mouthX: 0.21, mouthY: 0.08, corkRx: 10.4,
+        tubeD: 'M42,74 V134 C42,158 90,158 90,130 V82 C90,58 148,58 148,88 V136',
+        flowD: 'M42,22 V134 C42,158 90,158 90,130 V82 C90,58 148,58 148,88 V184'
+      },
+      {
+        id: 'pipe_heart', name: 'Pipe Lab', isPipe: true, yMin: 28, yMax: 186.5, mouthX: 0.21, mouthY: 0.08, corkRx: 10.4,
+        tubeD: 'M51,66 H74 C74,40 104,40 110,56 C116,40 148,40 148,66 C148,90 110,112 110,112 V120 Q110,128 122,128 H140 Q148,128 148,138',
+        branchD: 'M74,66 C74,90 110,112 110,112',
+        flowD: 'M42,22 V66 H74 C74,40 104,40 110,56 C116,40 148,40 148,66 C148,90 110,112 110,112 V120 Q110,128 122,128 H140 Q148,128 148,138 V184'
+      },
+      {
+        id: 'pipe_diamond', name: 'Pipe Lab', isPipe: true, yMin: 28, yMax: 186.5, mouthX: 0.21, mouthY: 0.08, corkRx: 10.4,
+        tubeD: 'M51,68 H70 L102,38 L134,68 Q148,68 148,84 V136',
+        branchD: 'M70,68 L102,98 L134,68',
+        flowD: 'M42,22 V68 H70 L102,38 L134,68 Q148,68 148,84 V184'
+      },
+      {
+        id: 'pipe_hex', name: 'Pipe Lab', isPipe: true, yMin: 28, yMax: 186.5, mouthX: 0.21, mouthY: 0.08, corkRx: 10.4,
+        tubeD: 'M51,68 H68 L86,40 H118 L136,68 Q148,68 148,84 V136',
+        branchD: 'M68,68 L86,96 H118 L136,68',
+        flowD: 'M42,22 V68 H68 L86,40 H118 L136,68 Q148,68 148,84 V184'
+      },
+      {
+        id: 'pipe_slant', name: 'Pipe Lab', isPipe: true, yMin: 28, yMax: 186.5, mouthX: 0.21, mouthY: 0.08, corkRx: 10.4,
+        tubeD: 'M51,48 H70 L138,116 Q148,124 148,136',
+        flowD: 'M42,22 V48 H70 L138,116 Q148,124 148,136 V184'
+      }
+    ];
+
+    const SHAPES = [
+      PIPE_SHAPES[0],
       {
         id: 'flask', name: 'Potion Flask', yMin: 36, yMax: 191, corkRx: 13.5,
         d: 'M76,16 H124 Q129,16 129,23 Q129,30 121,31 L117,33 L117,64 C149,78 168,107 168,140 C168,176 138,196 100,196 C62,196 32,176 32,140 C32,107 51,78 83,64 L83,33 L79,31 Q71,30 71,23 Q71,16 76,16 Z',
@@ -1249,6 +1321,8 @@ const GAME_HTML = `<!DOCTYPE html>
         facetD: 'M52,70 L100,98 L148,70 M100,98 L100,185'
       }
     ];
+    const ALL_SHAPES = PIPE_SHAPES.concat(SHAPES.slice(1));
+    const findShape = id => ALL_SHAPES.find(s => s.id === id) || PIPE_SHAPES[0];
 
     function rng(a) { return () => { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296 } }
     function getAudioCtx() {
@@ -1440,7 +1514,7 @@ const GAME_HTML = `<!DOCTYPE html>
     const isGameWon = () => shapeState ? Boolean(shapeState.units >= shapeState.cap && solved(B)) : solved(B);
 
     function paramsShape(l, overrideShape) {
-      const sh = overrideShape || SHAPES[(l - 1) % SHAPES.length];
+      const sh = overrideShape || resolveShapeForLevel(l, 'shape') || PIPE_SHAPES[0];
       const targetColor = ((l - 1) * 3) % 8;
       let initUnits, needed, other;
       if (l <= 2) { initUnits = 1; needed = 4; other = 3; }         // 6 bottles (4 filled), cap 5 -> 1 T/bottle
@@ -1654,9 +1728,8 @@ const GAME_HTML = `<!DOCTYPE html>
       const waveA = 'M0,' + wY + ' Q25,' + (wY - 5) + ' 50,' + wY + ' T100,' + wY + ' T150,' + wY + ' T200,' + wY + ' T250,' + wY + ' T300,' + wY + ' T350,' + wY + ' T400,' + wY + ' V' + (wY + 24) + ' H0 Z';
       const waveLine = 'M0,' + wY + ' Q25,' + (wY - 5) + ' 50,' + wY + ' T100,' + wY + ' T150,' + wY + ' T200,' + wY + ' T250,' + wY + ' T300,' + wY + ' T350,' + wY + ' T400,' + wY;
       const waveB = 'M0,' + (wY - 1) + ' Q50,' + (wY + 5) + ' 100,' + (wY - 1) + ' T200,' + (wY - 1) + ' T300,' + (wY - 1) + ' T400,' + (wY - 1) + ' V' + (wY + 24) + ' H0 Z';
-      const facets = sh.facetD ? '<path d="' + sh.facetD + '" fill="none" stroke="rgba(255,255,255,0.16)" stroke-width="1.3" stroke-linecap="round"/>' : '';
       const flowPath = sh.flowD || 'M100,24 V188';
-      const flowWidth = sh.id === 'pipe' ? 9 : 7;
+      const flowWidth = sh.isPipe ? 8.5 : 7;
       const mouthCx = (sh.mouthX || 0.5) * 200;
       const rxPlug = sh.corkRx || 12;
       const rxPlugBot = +(rxPlug * 0.84).toFixed(1);
@@ -1670,8 +1743,8 @@ const GAME_HTML = `<!DOCTYPE html>
         + '  <path d="M' + (mouthCx - rxCap).toFixed(1) + ',9.8 L' + (mouthCx - rxCap).toFixed(1) + ',15.2 Q' + mouthCx + ',18.6 ' + (mouthCx + rxCap).toFixed(1) + ',15.2 L' + (mouthCx + rxCap).toFixed(1) + ',9.8 Z" fill="url(#cork-cap-grad)" stroke="rgba(58,24,5,0.75)" stroke-width="0.75"/>'
         + '  <ellipse cx="' + mouthCx + '" cy="9.8" rx="' + rxCap + '" ry="3.1" fill="url(#cork-top-grad)" stroke="rgba(255,244,225,0.85)" stroke-width="0.65"/>'
         + '</g>';
-      const fishMarkup = sh.id === 'pipe'
-        ? '<g id="shape-fish" style="transform:translate(144px,172px)"><g class="fish-bob">'
+      const fishMarkup = sh.isPipe
+        ? '<g id="shape-fish" style="transform:translate(148px,168px)"><g class="fish-bob">'
           + '<path d="M-8,0 L-13,-4.5 L-11.5,0 L-13,4.5 Z" fill="#ff6b00"/>'
           + '<ellipse cx="0" cy="0" rx="8.5" ry="5.5" fill="#ff851b" stroke="#fff4e0" stroke-width="0.9"/>'
           + '<path d="M-2.5,-5.2 Q-0.5,0 -2.5,5.2" fill="none" stroke="#ffffff" stroke-width="2.1"/>'
@@ -1680,10 +1753,7 @@ const GAME_HTML = `<!DOCTYPE html>
           + '<circle cx="5.6" cy="-1.5" r="0.45" fill="#ffffff"/>'
           + '</g></g>'
         : '';
-      return ''
-        + '<svg id="shape-svg" viewBox="0 0 200 210" aria-hidden="true">'
-        + '  <defs>'
-        + '    <clipPath id="shape-clip"><path d="' + sh.clipD + '"/></clipPath>'
+      const sharedDefs = ''
         + '    <linearGradient id="shape-glass-bg" x1="0" y1="0" x2="1" y2="0.2">'
         + '      <stop offset="0%" stop-color="rgba(255,255,255,0.18)"/>'
         + '      <stop offset="35%" stop-color="rgba(255,255,255,0.04)"/>'
@@ -1723,25 +1793,84 @@ const GAME_HTML = `<!DOCTYPE html>
         + '    <linearGradient id="cork-top-grad" x1="0" y1="0" x2="0.4" y2="1">'
         + '      <stop offset="0%" stop-color="#f7e2c4"/>'
         + '      <stop offset="100%" stop-color="#cfa06b"/>'
-        + '    </linearGradient>'
-        + '  </defs>'
-        + '  <path d="' + sh.d + '" fill="url(#shape-glass-bg)"/>'
-        + '  <g clip-path="url(#shape-clip)">'
+        + '    </linearGradient>';
+      const bubs = sh.isPipe
+        ? '<circle class="shape-bub" cx="40" cy="' + (wY + 35) + '" r="2.2" fill="rgba(255,255,255,0.45)" style="animation-delay:0s"/>'
+          + '<circle class="shape-bub" cx="140" cy="' + (wY + 135) + '" r="3.0" fill="rgba(255,255,255,0.45)" style="animation-delay:0.8s"/>'
+          + '<circle class="shape-bub" cx="155" cy="' + (wY + 146) + '" r="2.4" fill="rgba(255,255,255,0.4)" style="animation-delay:1.8s"/>'
+        : '<circle class="shape-bub" cx="76" cy="' + (wY + 95) + '" r="3.2" fill="rgba(255,255,255,0.45)" style="animation-delay:0s"/>'
+          + '<circle class="shape-bub" cx="118" cy="' + (wY + 115) + '" r="2.4" fill="rgba(255,255,255,0.4)" style="animation-delay:1.1s"/>'
+          + '<circle class="shape-bub" cx="95" cy="' + (wY + 130) + '" r="3.8" fill="rgba(255,255,255,0.35)" style="animation-delay:2.1s"/>'
+          + '<circle class="shape-bub" cx="144" cy="' + (wY + 150) + '" r="2.6" fill="rgba(255,255,255,0.48)" style="animation-delay:0.6s"/>';
+      const liqContent = ''
         + '    <path id="shape-pipe-flow" d="' + flowPath + '" fill="none" stroke="' + colorHex + '" stroke-width="' + flowWidth + '" stroke-linecap="round" stroke-linejoin="round" style="opacity:0"/>'
-        + '    <path id="shape-pipe-flow-core" d="' + flowPath + '" fill="none" stroke="rgba(255,255,255,0.48)" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" style="opacity:0"/>'
+        + '    <path id="shape-pipe-flow-core" d="' + flowPath + '" fill="none" stroke="rgba(255,255,255,0.48)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="opacity:0"/>'
         + '    <g id="shape-liq-wrap">'
         + '      <path class="shape-wave-b" d="' + waveB + '" fill="' + colorHex + '" opacity="0.55"/>'
         + '      <path class="shape-wave-b" d="' + waveB + '" fill="rgba(255,255,255,0.22)"/>'
         + '      <rect x="0" y="' + (wY + 5) + '" width="200" height="' + (span + 34) + '" fill="' + colorHex + '"/>'
         + '      <path class="shape-wave-a" d="' + waveA + '" fill="' + colorHex + '"/>'
         + '      <path class="shape-wave-a" d="' + waveLine + '" fill="none" stroke="rgba(255,255,255,0.68)" stroke-width="2.2" stroke-linecap="round"/>'
-        + '      <circle class="shape-bub" cx="76" cy="' + (wY + 95) + '" r="3.2" fill="rgba(255,255,255,0.45)" style="animation-delay:0s"/>'
-        + '      <circle class="shape-bub" cx="118" cy="' + (wY + 115) + '" r="2.4" fill="rgba(255,255,255,0.4)" style="animation-delay:1.1s"/>'
-        + '      <circle class="shape-bub" cx="95" cy="' + (wY + 130) + '" r="3.8" fill="rgba(255,255,255,0.35)" style="animation-delay:2.1s"/>'
-        + '      <circle class="shape-bub" cx="144" cy="' + (wY + 150) + '" r="2.6" fill="rgba(255,255,255,0.48)" style="animation-delay:0.6s"/>'
+        + bubs
         + '    </g>'
         + fishMarkup
-        + '    <rect x="0" y="0" width="200" height="210" fill="url(#shape-liq-3d)" pointer-events="none"/>'
+        + '    <rect x="0" y="0" width="200" height="210" fill="url(#shape-liq-3d)" pointer-events="none"/>';
+
+      if (sh.isPipe) {
+        const fOut = 'M26,15 H58 Q62,15 62,20 Q62,25 56,26 L56,74 Q56,82 42,82 Q28,82 28,74 L28,26 Q22,25 22,20 Q22,15 26,15 Z';
+        const fIn = 'M31,26 H53 V73 Q53,78.5 42,78.5 Q31,78.5 31,73 Z';
+        const brOut = sh.branchD ? '      <path d="' + sh.branchD + '" fill="none" stroke="#fff" stroke-width="19" stroke-linecap="round" stroke-linejoin="round"/>' : '';
+        const brInW = sh.branchD ? '      <path d="' + sh.branchD + '" fill="none" stroke="#fff" stroke-width="12.6" stroke-linecap="round" stroke-linejoin="round"/>' : '';
+        const brInB = sh.branchD ? '      <path d="' + sh.branchD + '" fill="none" stroke="#000" stroke-width="12.6" stroke-linecap="round" stroke-linejoin="round"/>' : '';
+        const brShine = sh.branchD ? '    <path d="' + sh.branchD + '" fill="none" stroke="rgba(255,255,255,0.24)" stroke-width="2.2" stroke-linecap="round" transform="translate(0,-3)" pointer-events="none"/>' : '';
+        return ''
+          + '<svg id="shape-svg" viewBox="0 0 200 210" aria-hidden="true">'
+          + '  <defs>'
+          + '    <mask id="pipe-liq-mask">'
+          + '      <rect x="0" y="0" width="200" height="210" fill="#000"/>'
+          + '      <path d="' + fIn + '" fill="#fff"/>'
+          + '      <path d="' + sh.tubeD + '" fill="none" stroke="#fff" stroke-width="12.6" stroke-linecap="round" stroke-linejoin="round"/>'
+          + brInW
+          + '      <circle cx="148" cy="158" r="28.5" fill="#fff"/>'
+          + '    </mask>'
+          + '    <mask id="pipe-wall-mask">'
+          + '      <rect x="0" y="0" width="200" height="210" fill="#000"/>'
+          + '      <path d="' + fOut + '" fill="#fff"/>'
+          + '      <path d="' + sh.tubeD + '" fill="none" stroke="#fff" stroke-width="19" stroke-linecap="round" stroke-linejoin="round"/>'
+          + brOut
+          + '      <circle cx="148" cy="158" r="32" fill="#fff"/>'
+          + '      <path d="' + fIn + '" fill="#000"/>'
+          + '      <path d="' + sh.tubeD + '" fill="none" stroke="#000" stroke-width="12.6" stroke-linecap="round" stroke-linejoin="round"/>'
+          + brInB
+          + '      <circle cx="148" cy="158" r="28.5" fill="#000"/>'
+          + '    </mask>'
+          + sharedDefs
+          + '  </defs>'
+          + '  <g mask="url(#pipe-liq-mask)">'
+          + '    <rect x="0" y="0" width="200" height="210" fill="url(#shape-glass-bg)"/>'
+          + liqContent
+          + '    <rect x="0" y="0" width="200" height="210" fill="url(#shape-glass-sheen)" pointer-events="none"/>'
+          + '    <path d="' + sh.tubeD + '" fill="none" stroke="rgba(255,255,255,0.28)" stroke-width="2.4" stroke-linecap="round" transform="translate(0,-3)" pointer-events="none"/>'
+          + brShine
+          + '  </g>'
+          + '  <rect x="0" y="0" width="200" height="210" fill="rgba(225,220,255,0.85)" mask="url(#pipe-wall-mask)" pointer-events="none"/>'
+          + '  <path d="M32.5,30 H37 V71 Q34.5,73 32.5,68 Z M123,156 C123,140 131,131 141,129 C134,137 130,146 130,158 C130,167 133,174 139,179 C128,175 123,166 123,156 Z" fill="url(#shape-spec-grad)" pointer-events="none"/>'
+          + '  <path d="M167,138 C173,145 174,158 167,172 C170,163 170,150 167,138 Z" fill="rgba(255,255,255,0.20)" pointer-events="none"/>'
+          + '  <ellipse cx="' + mouthCx + '" cy="18" rx="' + lipRx + '" ry="3.2" fill="rgba(255,255,255,0.20)" stroke="rgba(240,235,255,0.82)" stroke-width="1.4" pointer-events="none"/>'
+          + corkMarkup
+          + '</svg>';
+      }
+
+      const facets = sh.facetD ? '<path d="' + sh.facetD + '" fill="none" stroke="rgba(255,255,255,0.16)" stroke-width="1.3" stroke-linecap="round"/>' : '';
+      return ''
+        + '<svg id="shape-svg" viewBox="0 0 200 210" aria-hidden="true">'
+        + '  <defs>'
+        + '    <clipPath id="shape-clip"><path d="' + sh.clipD + '"/></clipPath>'
+        + sharedDefs
+        + '  </defs>'
+        + '  <path d="' + sh.d + '" fill="url(#shape-glass-bg)"/>'
+        + '  <g clip-path="url(#shape-clip)">'
+        + liqContent
         + '  </g>'
         + facets
         + '  <path d="' + sh.clipD + '" fill="none" stroke="rgba(255,255,255,0.24)" stroke-width="1.4" pointer-events="none"/>'
@@ -1852,7 +1981,7 @@ const GAME_HTML = `<!DOCTYPE html>
           }
           midRow.appendChild(leftSide);
         }
-        const shDef = SHAPES.find(s => s.id === shapeState.id) || SHAPES[0];
+        const shDef = findShape(shapeState.id);
         const shWrap = document.createElement('div');
         shWrap.id = 'shape-wrap';
         shWrap.className = 'shape-wrap';
@@ -1930,7 +2059,7 @@ const GAME_HTML = `<!DOCTYPE html>
       $('un').parentNode.classList.toggle('off', !hist.length || !undos);
       $('ab').parentNode.classList.toggle('off', !adds || B.length >= 25);
       if (shapeState) {
-        const shDef = SHAPES.find(s => s.id === shapeState.id) || SHAPES[0];
+        const shDef = findShape(shapeState.id);
         const frac = Math.min(1, shapeState.units / shapeState.cap);
         const offsetY = (1 - frac) * (shDef.yMax - shDef.yMin);
         const liqEl = $('shape-liq-wrap');
@@ -1938,11 +2067,8 @@ const GAME_HTML = `<!DOCTYPE html>
         const fishEl = $('shape-fish');
         if (fishEl) {
           const liqTopY = shDef.yMin + offsetY;
-          let fx = 144, fy = Math.min(176, liqTopY + 11);
-          if (liqTopY <= 128) {
-            fx = 90;
-            fy = Math.max(76, Math.min(126, liqTopY + 12));
-          }
+          const fx = 148;
+          const fy = Math.max(145, Math.min(171, liqTopY + 13));
           fishEl.style.transform = 'translate(' + fx + 'px,' + fy.toFixed(1) + 'px)';
         }
         const shWrap = $('shape-wrap');
@@ -2021,7 +2147,7 @@ const GAME_HTML = `<!DOCTYPE html>
     async function pourToShape(a) {
       busy = true;
       hist.push({ B: JSON.parse(JSON.stringify(B)), cov: cov.slice(), shapeUnits: shapeState.units });
-      const shDef = SHAPES.find(s => s.id === shapeState.id) || SHAPES[0];
+      const shDef = findShape(shapeState.id);
       const ea = els[a], shEl = $('shape-wrap'), ra = ea.getBoundingClientRect(), rb = shEl.getBoundingClientRect();
       const ah = ra.height, aw = ra.width;
       const bcx = rb.left + rb.width * (shDef.mouthX || 0.5);
@@ -2036,7 +2162,7 @@ const GAME_HTML = `<!DOCTYPE html>
       sel = null; ea.classList.remove('sel'); ea.style.transition = 'none'; ea.style.zIndex = 20;
       shEl.classList.remove('ready');
       const st = $('stream'); st.getAnimations().forEach(x => x.cancel());
-      const surf = shDef.id === 'pipe'
+      const surf = shDef.isPipe
         ? (mouthY + Math.max(16, rb.height * 0.14))
         : (rb.top + rb.height * (0.89 - ((shapeState.units + n / 2) / shapeState.cap) * 0.70));
       const m0 = myf(52), m1 = myf(88);
