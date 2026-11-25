@@ -4,6 +4,10 @@ const GAME_HTML = `<!DOCTYPE html>
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="theme-color" content="#08051a">
   <title>Water Sort</title>
   <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600&display=swap" rel="stylesheet">
   <style>
@@ -112,7 +116,7 @@ const GAME_HTML = `<!DOCTYPE html>
 
     body.theme-wood #app {
       z-index: 3;
-      padding: calc(52px + var(--sat)) 16px calc(48px + var(--sab));
+      padding: calc(46px + var(--sat) * 0.6) 10px calc(48px + var(--sab));
     }
 
     body.theme-wood .title b {
@@ -170,7 +174,7 @@ const GAME_HTML = `<!DOCTYPE html>
 
     #garden-top {
       top: -4px;
-      height: calc(64px + var(--sat));
+      height: calc(56px + var(--sat) * 0.45);
       filter: drop-shadow(0 5px 10px rgba(20, 8, 2, 0.58));
       animation: leafSwayTop 5s ease-in-out infinite;
     }
@@ -206,7 +210,7 @@ const GAME_HTML = `<!DOCTYPE html>
       flex-direction: column;
       max-width: 620px;
       margin: 0 auto;
-      padding: calc(16px + var(--sat)) 16px calc(18px + var(--sab))
+      padding: calc(16px + var(--sat)) 10px calc(18px + var(--sab))
     }
 
     header {
@@ -299,13 +303,13 @@ const GAME_HTML = `<!DOCTYPE html>
       flex-direction: column;
       justify-content: center;
       align-items: center;
-      gap: min(38px, calc(var(--bh)*.32));
-      margin-top: 24px;
+      gap: var(--rgap, min(38px, calc(var(--bh)*.36)));
+      margin-top: 14px;
     }
 
     #board.board-dense {
-      gap: min(20px, calc(var(--bh)*.22));
-      margin-top: 6px;
+      gap: var(--rgap, min(28px, calc(var(--bh)*.32)));
+      margin-top: 8px;
     }
 
     #board::before {
@@ -322,7 +326,7 @@ const GAME_HTML = `<!DOCTYPE html>
 
     .row {
       display: flex;
-      gap: calc(var(--bw)*.46);
+      gap: var(--cgap, calc(var(--bw)*.56));
       justify-content: center
     }
 
@@ -938,16 +942,23 @@ const GAME_HTML = `<!DOCTYPE html>
     }
 
     #board.board-shape {
-      gap: min(16px, calc(var(--bh) * 0.16));
-      margin-top: 8px;
+      gap: var(--rgap, 26px);
+      margin-top: 10px;
     }
 
     .shape-mid-row {
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: clamp(12px, 4vw, 24px);
+      gap: var(--mgap, clamp(14px, 4.5vw, 28px));
       width: 100%;
+    }
+
+    .shape-side {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: var(--sgap, var(--cgap, 16px));
     }
 
     .shape-wrap {
@@ -1746,38 +1757,59 @@ const GAME_HTML = `<!DOCTYPE html>
       const bd = $('board');
       bd.innerHTML = ''; els = [];
       { const s = $('stream'); s.getAnimations().forEach(x => x.cancel()); s.style.display = 'none'; }
-      const aw = Math.max(240, bd.clientWidth - 16);
-      const ah = Math.max(240, bd.clientHeight - (n >= 15 ? 32 : 70));
+      const aw = Math.max(260, bd.clientWidth - 8);
+      const ah = Math.max(260, bd.clientHeight - 24);
       const root = document.documentElement.style;
       if (mode === 'shape' && shapeState) {
         bd.classList.remove('board-dense');
         bd.classList.add('board-shape');
-        const sideCount = n >= 4 ? 2 : 0;
+        const sidePairs = (n >= 16 && aw >= 330) ? 2 : (n >= 4 ? 1 : 0);
+        const sideCount = sidePairs * 2;
         const rem = n - sideCount;
         const topN = Math.ceil(rem / 2);
         const botN = rem - topN;
-        const topRows = topN === 0 ? 0 : (topN <= 5 ? 1 : Math.ceil(topN / 6));
-        const botRows = botN === 0 ? 0 : (botN <= 5 ? 1 : Math.ceil(botN / 6));
+        const topRows = topN === 0 ? 0 : (topN <= 6 ? 1 : Math.ceil(topN / 6));
+        const botRows = botN === 0 ? 0 : (botN <= 6 ? 1 : Math.ceil(botN / 6));
         const perTop = topRows ? Math.ceil(topN / topRows) : 0;
         const perBot = botRows ? Math.ceil(botN / botRows) : 0;
         const totalBRows = Math.max(2, topRows + botRows);
         const maxPerRow = Math.max(perTop, perBot, 3);
-        const bwByRow = (aw / (maxPerRow + 0.46 * (maxPerRow - 1))) * 0.88;
-        const shapeSize = totalBRows >= 3
-          ? Math.min(168, Math.max(114, Math.min(aw * 0.46, ah * 0.31)))
-          : Math.min(200, Math.max(142, Math.min(aw * 0.54, ah * 0.44)));
-        const bwByMid = sideCount ? (aw - shapeSize - 32) / 2.3 : bwByRow;
-        let bw = Math.min(totalBRows >= 3 ? 33 : 36, bwByRow, bwByMid);
-        const bhMax = (ah - shapeSize * 1.05 - (totalBRows + 1) * 12) / totalBRows;
-        let bh = Math.min(bhMax, bw * 2.55, totalBRows >= 3 ? 80 : 94);
-        if (bh < 42) {
-          bh = Math.max(36, bhMax);
+        const rowGapRatio = maxPerRow >= 6 ? 0.56 : 0.65;
+        const bwByRow = (aw - 10) / (maxPerRow + rowGapRatio * (maxPerRow - 1));
+        const shapeMaxW = totalBRows >= 3
+          ? Math.min(sidePairs === 2 ? 156 : 176, aw * (sidePairs === 2 ? 0.42 : 0.48))
+          : Math.min(sidePairs === 2 ? 176 : 206, aw * (sidePairs === 2 ? 0.45 : 0.54));
+        const shapeSize = Math.min(shapeMaxW, Math.max(totalBRows >= 3 ? 118 : 142, ah * (totalBRows >= 3 ? 0.30 : 0.41)));
+        const shapeH = shapeSize * 1.05;
+        const bwByMid = sidePairs
+          ? (aw - 12 - shapeSize - (sidePairs === 2 ? 32 : 34)) / (sidePairs === 2 ? (4 + 2 * 0.48) : 2)
+          : bwByRow;
+        const minRowGap = totalBRows >= 3 ? (ah >= 470 ? 24 : 18) : 28;
+        const totalVGaps = Math.max(2, topRows + botRows);
+        let bw = Math.min(totalBRows >= 3 ? 36 : 44, bwByRow, bwByMid);
+        const bhMax = (ah - shapeH - totalVGaps * minRowGap) / totalBRows;
+        let bh = Math.min(bhMax, bw * 2.35, totalBRows >= 3 ? 74 : 96);
+        if (bh < 44) {
+          bh = Math.max(38, bhMax);
           bw = Math.min(bw, bh / 2.2);
         }
-        root.setProperty('--bw', bw + 'px');
-        root.setProperty('--bh', bh + 'px');
-        root.setProperty('--sw', shapeSize + 'px');
-        root.setProperty('--sh', (shapeSize * 1.05) + 'px');
+        const rowFree = Math.max(0, aw - 12 - maxPerRow * bw);
+        const cgap = Math.min(30, Math.max(14, maxPerRow > 1 ? (rowFree / (maxPerRow - 1)) * 0.86 : 18));
+        const midFree = Math.max(24, aw - 12 - shapeSize - sideCount * bw);
+        const sgap = sidePairs === 2 ? Math.min(cgap, Math.max(11, Math.floor(midFree * 0.22))) : cgap;
+        const mgap = sidePairs === 2
+          ? Math.min(28, Math.max(12, Math.floor((midFree - 2 * sgap) * 0.45)))
+          : Math.min(38, Math.max(16, Math.floor(midFree * 0.42)));
+        const rgap = Math.min(40, Math.max(minRowGap, Math.floor((ah - shapeH - bh * totalBRows) / totalVGaps)));
+
+        root.setProperty('--bw', bw.toFixed(1) + 'px');
+        root.setProperty('--bh', bh.toFixed(1) + 'px');
+        root.setProperty('--cgap', cgap.toFixed(1) + 'px');
+        root.setProperty('--sgap', sgap.toFixed(1) + 'px');
+        root.setProperty('--mgap', mgap.toFixed(1) + 'px');
+        root.setProperty('--rgap', rgap + 'px');
+        root.setProperty('--sw', shapeSize.toFixed(1) + 'px');
+        root.setProperty('--sh', shapeH.toFixed(1) + 'px');
         root.setProperty('--scol', COL[shapeState.color]);
 
         let row;
@@ -1787,8 +1819,13 @@ const GAME_HTML = `<!DOCTYPE html>
         }
 
         const midRow = document.createElement('div'); midRow.className = 'shape-mid-row';
-        if (sideCount) {
-          const leftEl = makeBottleEl(topN); midRow.appendChild(leftEl); els[topN] = leftEl;
+        if (sidePairs) {
+          const leftSide = document.createElement('div'); leftSide.className = 'shape-side';
+          for (let k = 0; k < sidePairs; k++) {
+            const idx = topN + k;
+            const e = makeBottleEl(idx); leftSide.appendChild(e); els[idx] = e;
+          }
+          midRow.appendChild(leftSide);
         }
         const shDef = SHAPES.find(s => s.id === shapeState.id) || SHAPES[0];
         root.setProperty('--smx', ((shDef.mouthX || 0.5) * 100) + '%');
@@ -1802,8 +1839,13 @@ const GAME_HTML = `<!DOCTYPE html>
         shWrap.onclick = tapShape;
         shWrap.onkeydown = ev => { if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); tapShape() } };
         midRow.appendChild(shWrap);
-        if (sideCount) {
-          const rightEl = makeBottleEl(topN + 1); midRow.appendChild(rightEl); els[topN + 1] = rightEl;
+        if (sidePairs) {
+          const rightSide = document.createElement('div'); rightSide.className = 'shape-side';
+          for (let k = 0; k < sidePairs; k++) {
+            const idx = topN + sidePairs + k;
+            const e = makeBottleEl(idx); rightSide.appendChild(e); els[idx] = e;
+          }
+          midRow.appendChild(rightSide);
         }
         bd.appendChild(midRow);
 
@@ -1817,16 +1859,24 @@ const GAME_HTML = `<!DOCTYPE html>
         bd.classList.toggle('board-dense', n >= 15);
         const rows = n <= 5 ? 1 : (n <= 14 ? 2 : (n <= 21 ? 3 : 4));
         const perRow = n <= 5 ? n : Math.ceil(n / rows);
-        const gapRatio = 0.46;
-        const bwMax = Math.min(52, aw / (perRow + gapRatio * (perRow - 1)));
-        const bhMax = ah / (rows + .32 * (rows - 1));
+        const totalVGaps = Math.max(0, rows - 1);
+        const minRowGap = rows > 1 ? 26 : 0;
+        const gapRatio = perRow >= 6 ? 0.56 : 0.65;
+        const bwMax = Math.min(54, (aw - 10) / (perRow + gapRatio * (perRow - 1)));
+        const bhMax = (ah - totalVGaps * minRowGap) / rows;
         let bw = Math.min(bwMax, bhMax / 2.65);
         let bh = Math.min(bhMax, bw * 2.65);
         if (bh < 48) {
           bh = Math.max(44, bhMax);
           bw = Math.min(bwMax, bh / 2.5);
         }
-        root.setProperty('--bw', bw + 'px'); root.setProperty('--bh', bh + 'px');
+        const rowFree = Math.max(0, aw - 12 - perRow * bw);
+        const cgap = Math.min(34, Math.max(15, perRow > 1 ? (rowFree / (perRow - 1)) * 0.85 : 22));
+        const rgap = totalVGaps ? Math.min(44, Math.max(minRowGap, Math.floor((ah - bh * rows) / totalVGaps))) : 0;
+        root.setProperty('--bw', bw.toFixed(1) + 'px');
+        root.setProperty('--bh', bh.toFixed(1) + 'px');
+        root.setProperty('--cgap', cgap.toFixed(1) + 'px');
+        root.setProperty('--rgap', rgap + 'px');
         let row;
         B.forEach((_, i) => {
           if (i % perRow === 0) { row = document.createElement('div'); row.className = 'row'; bd.appendChild(row) }

@@ -19,6 +19,29 @@
         "backgroundColor": "#08051a"
       }
     },
+    "androidStatusBar": {
+      "hidden": true,
+      "translucent": true,
+      "barStyle": "light-content",
+      "backgroundColor": "#00000000"
+    },
+    "androidNavigationBar": {
+      "visible": "sticky-immersive",
+      "barStyle": "light-content",
+      "backgroundColor": "#00000000"
+    },
+    "plugins": [
+      [
+        "expo-navigation-bar",
+        {
+          "position": "absolute",
+          "visibility": "hidden",
+          "behavior": "overlay-swipe",
+          "backgroundColor": "#00000000",
+          "barStyle": "light"
+        }
+      ]
+    ],
     "web": {
       "favicon": "./assets/favicon.png"
     },
