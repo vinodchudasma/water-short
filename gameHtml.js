@@ -408,8 +408,9 @@ const GAME_HTML = `<!DOCTYPE html>
       inset: 0;
       display: none;
       place-items: center;
-      background: #05021090;
-      backdrop-filter: blur(4px);
+      padding: 24px;
+      background: radial-gradient(circle at 50% 42%, rgba(91, 33, 182, 0.42), rgba(5, 2, 16, 0.88));
+      backdrop-filter: blur(8px);
       z-index: 50
     }
 
@@ -427,25 +428,85 @@ const GAME_HTML = `<!DOCTYPE html>
       animation: pop .5s cubic-bezier(.3, 1.5, .5, 1)
     }
 
+    #win .card.win-card {
+      position: relative;
+      width: min(88vw, 348px);
+      padding: 46px 24px 24px;
+      border-radius: 30px;
+      background: linear-gradient(165deg, #43268c 0%, #261458 55%, #160b36 100%);
+      border: 2px solid rgba(255, 215, 100, 0.45);
+      box-shadow: 0 24px 60px rgba(0, 0, 0, 0.72), 0 0 42px rgba(168, 85, 247, 0.32), inset 0 1px 1px rgba(255, 255, 255, 0.28);
+      animation: pop .48s cubic-bezier(.34, 1.48, .64, 1);
+    }
+
+    .win-glow-bg {
+      position: absolute;
+      inset: 0;
+      border-radius: inherit;
+      overflow: hidden;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .win-glow-bg::before {
+      content: "";
+      position: absolute;
+      left: 50%;
+      top: 18%;
+      width: 340px;
+      height: 340px;
+      margin-left: -170px;
+      margin-top: -170px;
+      background: repeating-conic-gradient(from 0deg, rgba(255, 210, 63, 0.11) 0deg 14deg, transparent 14deg 30deg);
+      -webkit-mask-image: radial-gradient(circle, #000 0%, transparent 66%);
+      mask-image: radial-gradient(circle, #000 0%, transparent 66%);
+      animation: winRays 18s linear infinite;
+    }
+
+    .win-glow-bg::after {
+      content: "";
+      position: absolute;
+      left: 50%;
+      top: -30px;
+      transform: translateX(-50%);
+      width: 240px;
+      height: 140px;
+      background: radial-gradient(ellipse, rgba(255, 210, 63, 0.22) 0%, transparent 72%);
+    }
+
+    @keyframes winRays {
+      to { transform: rotate(360deg); }
+    }
+
+    .win-card > *:not(.win-glow-bg):not(.win-ribbon) {
+      position: relative;
+      z-index: 1;
+    }
+
     @keyframes pop {
       from {
-        transform: scale(.6);
+        transform: scale(.68) translateY(16px);
         opacity: 0
       }
     }
 
     .win-ribbon {
-      display: inline-block;
+      position: absolute;
+      top: -19px;
+      left: 50%;
+      transform: translateX(-50%);
+      white-space: nowrap;
+      z-index: 2;
       font-size: 13px;
-      font-weight: 600;
+      font-weight: 700;
       letter-spacing: 2px;
       text-transform: uppercase;
-      color: var(--gold);
-      background: rgba(255, 210, 63, 0.15);
-      border: 1px solid rgba(255, 210, 63, 0.45);
-      padding: 5px 16px;
-      border-radius: 20px;
-      margin-bottom: 10px;
+      color: #421902;
+      background: linear-gradient(180deg, #fff08a 0%, #ffd23f 48%, #f59e0b 100%);
+      border: 2px solid #fffbeb;
+      padding: 7px 24px;
+      border-radius: 999px;
+      box-shadow: 0 4px 0 #b45309, 0 8px 22px rgba(245, 158, 11, 0.5);
     }
 
     .stars-container {
@@ -453,29 +514,154 @@ const GAME_HTML = `<!DOCTYPE html>
       justify-content: center;
       align-items: center;
       gap: 10px;
-      margin: 4px 0 10px;
+      margin: 4px 0 12px;
+      min-height: 64px;
     }
 
     .star {
-      font-size: 38px;
-      color: var(--gold);
-      text-shadow: 0 0 16px rgba(255, 210, 63, 0.75);
-      display: inline-block;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      filter: drop-shadow(0 4px 10px rgba(255, 210, 63, 0.55));
     }
 
-    .star.s2 {
-      font-size: 46px;
-      transform: translateY(-4px);
+    .star svg {
+      width: 44px;
+      height: 44px;
+      display: block;
     }
 
-    #win.on .s1 { animation: starPop .45s .15s cubic-bezier(.34, 1.56, .64, 1) both; }
-    #win.on .s2 { animation: starPop .45s .3s cubic-bezier(.34, 1.56, .64, 1) both; }
-    #win.on .s3 { animation: starPop .45s .45s cubic-bezier(.34, 1.56, .64, 1) both; }
+    .star.s2 svg {
+      width: 58px;
+      height: 58px;
+    }
 
-    @keyframes starPop {
-      0% { transform: scale(0) rotate(-35deg); opacity: 0; }
-      70% { transform: scale(1.28) rotate(8deg); }
-      100% { transform: scale(1) rotate(0deg); opacity: 1; }
+    #win.on .s1 { animation: starPopL .5s .12s cubic-bezier(.34, 1.56, .64, 1) both; }
+    #win.on .s2 { animation: starPopC .52s .26s cubic-bezier(.34, 1.56, .64, 1) both; }
+    #win.on .s3 { animation: starPopR .5s .4s cubic-bezier(.34, 1.56, .64, 1) both; }
+
+    @keyframes starPopL {
+      0% { transform: scale(0) rotate(-45deg) translateY(18px); opacity: 0; }
+      70% { transform: scale(1.2) rotate(-18deg) translateY(2px); opacity: 1; }
+      100% { transform: scale(1) rotate(-12deg) translateY(5px); opacity: 1; }
+    }
+
+    @keyframes starPopC {
+      0% { transform: scale(0) rotate(-25deg) translateY(16px); opacity: 0; }
+      70% { transform: scale(1.24) rotate(6deg) translateY(-12px); opacity: 1; }
+      100% { transform: scale(1) rotate(0deg) translateY(-8px); opacity: 1; }
+    }
+
+    @keyframes starPopR {
+      0% { transform: scale(0) rotate(45deg) translateY(18px); opacity: 0; }
+      70% { transform: scale(1.2) rotate(18deg) translateY(2px); opacity: 1; }
+      100% { transform: scale(1) rotate(12deg) translateY(5px); opacity: 1; }
+    }
+
+    .win-card h2 {
+      margin: 0 0 6px;
+      font-size: 27px;
+      color: #fff;
+      text-shadow: 0 2px 10px rgba(0, 0, 0, 0.45);
+    }
+
+    .win-card p {
+      margin: 0 0 18px;
+      color: #d4c8ff;
+      font-size: 14px;
+    }
+
+    .win-stats {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin: 0 0 20px;
+    }
+
+    .win-stat {
+      background: rgba(12, 6, 34, 0.48);
+      border: 1px solid rgba(196, 181, 253, 0.22);
+      border-radius: 16px;
+      padding: 10px 8px;
+      box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.28);
+    }
+
+    .win-stat span {
+      display: block;
+      font-size: 11px;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      color: #a78bfa;
+      margin-bottom: 2px;
+    }
+
+    .win-stat b {
+      display: block;
+      font-size: 19px;
+      font-weight: 600;
+      color: #fff;
+    }
+
+    .win-actions {
+      display: flex;
+      gap: 10px;
+      align-items: stretch;
+    }
+
+    .win-replay-btn {
+      width: 54px;
+      flex: none;
+      border-radius: 18px;
+      border: 2px solid rgba(196, 181, 253, 0.28);
+      background: rgba(255, 255, 255, 0.09);
+      color: #fff;
+      font: 600 22px 'Fredoka', sans-serif;
+      cursor: pointer;
+      box-shadow: 0 4px 0 rgba(10, 4, 30, 0.72);
+      transition: transform .12s;
+    }
+
+    .win-replay-btn:active {
+      transform: translateY(3px);
+      box-shadow: 0 1px 0 rgba(10, 4, 30, 0.72);
+    }
+
+    .win-next-btn {
+      flex: 1;
+      position: relative;
+      overflow: hidden;
+      border: 0;
+      border-radius: 18px;
+      padding: 14px 20px;
+      font: 600 18px 'Fredoka', sans-serif;
+      color: #fff;
+      background: linear-gradient(180deg, #4ade80 0%, #22c55e 48%, #16a34a 100%);
+      box-shadow: 0 5px 0 #14532d, 0 8px 22px rgba(34, 197, 94, 0.42), inset 0 1px 0 rgba(255, 255, 255, 0.5);
+      cursor: pointer;
+      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+      transition: transform .12s;
+    }
+
+    .win-next-btn::after {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: -60%;
+      width: 45%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.35), transparent);
+      transform: skewX(-22deg);
+      animation: btnShine 2.6s ease-in-out infinite;
+    }
+
+    @keyframes btnShine {
+      0%, 55% { left: -60%; }
+      100% { left: 130%; }
+    }
+
+    .win-next-btn:active {
+      transform: translateY(3px);
+      box-shadow: 0 2px 0 #14532d;
     }
 
     .card h2 {
@@ -571,15 +757,24 @@ const GAME_HTML = `<!DOCTYPE html>
   </div>
   <div id="toast"></div>
   <div id="win">
-    <div class="card">
+    <div class="card win-card">
+      <div class="win-glow-bg"></div>
       <div class="win-ribbon">Congratulations!</div>
       <div class="stars-container" aria-hidden="true">
-        <span class="star s1">★</span>
-        <span class="star s2">★</span>
-        <span class="star s3">★</span>
+        <span class="star s1"><svg viewBox="0 0 48 48"><path d="M24 3.5l6.1 12.6 13.9 2-10 9.8 2.4 13.8L24 35.1l-12.4 6.6 2.4-13.8-10-9.8 13.9-2z" fill="#ffd23f" stroke="#fff3b0" stroke-width="2.2" stroke-linejoin="round"/><path d="M24 6.5l4.4 9.5-4.4 8-4.4-8z" fill="#fff7c2" opacity="0.55"/></svg></span>
+        <span class="star s2"><svg viewBox="0 0 48 48"><path d="M24 3.5l6.1 12.6 13.9 2-10 9.8 2.4 13.8L24 35.1l-12.4 6.6 2.4-13.8-10-9.8 13.9-2z" fill="#ffd23f" stroke="#fff3b0" stroke-width="2.2" stroke-linejoin="round"/><path d="M24 6.5l4.4 9.5-4.4 8-4.4-8z" fill="#fff7c2" opacity="0.6"/></svg></span>
+        <span class="star s3"><svg viewBox="0 0 48 48"><path d="M24 3.5l6.1 12.6 13.9 2-10 9.8 2.4 13.8L24 35.1l-12.4 6.6 2.4-13.8-10-9.8 13.9-2z" fill="#ffd23f" stroke="#fff3b0" stroke-width="2.2" stroke-linejoin="round"/><path d="M24 6.5l4.4 9.5-4.4 8-4.4-8z" fill="#fff7c2" opacity="0.55"/></svg></span>
       </div>
       <h2 id="win-lvl-text">Level Complete!</h2>
-      <p id="wm"></p><button class="go" id="nx">Next level</button>
+      <p id="wm"></p>
+      <div class="win-stats">
+        <div class="win-stat"><span>Moves</span><b id="win-moves">0</b></div>
+        <div class="win-stat"><span>Bottles</span><b id="win-bottles">0</b></div>
+      </div>
+      <div class="win-actions">
+        <button class="win-replay-btn" id="win-replay" aria-label="Replay level">↻</button>
+        <button class="win-next-btn" id="nx">Next Level ▶</button>
+      </div>
     </div>
   </div>
   <script>
@@ -953,19 +1148,22 @@ const GAME_HTML = `<!DOCTYPE html>
       confetti();
       busy = true; sfxWin();
       try { localStorage.setItem('ws_level', L + 1) } catch (e) { }
-      if ($('win-lvl-text')) $('win-lvl-text').textContent = 'Level ' + L + ' Complete!';
-      $('wm').textContent = label(L + 1) == label(L) ? 'Level ' + (L + 1) + ' is next.' : 'Level ' + (L + 1) + ' gets ' + label(L + 1).toLowerCase() + '.';
+      if ($('win-lvl-text')) $('win-lvl-text').textContent = 'Level ' + L + ' Cleared!';
+      if ($('win-moves')) $('win-moves').textContent = hist.length;
+      if ($('win-bottles')) $('win-bottles').textContent = params(L).colors;
+      $('wm').textContent = label(L + 1) == label(L) ? 'Level ' + (L + 1) + ' is waiting for you' : 'Unlocking ' + label(L + 1).toLowerCase() + ' mode on Level ' + (L + 1);
       await sleep(400);
       $('win').classList.add('on');
       if (auto) {
         await sleep(2200);
-        if (auto) {
+        if (auto && $('win').classList.contains('on')) {
           $('win').classList.remove('on');
           L++; build();
         }
       }
     }
     $('nx').onclick = () => { $('win').classList.remove('on'); L++; build() };
+    $('win-replay').onclick = () => { $('win').classList.remove('on'); build() };
     $('un').onclick = undo; $('ab').onclick = addBottle;
     window.addEventListener('resize', () => { if (!busy) render() });
     let SP = 1.42, auto = false, running = false;
