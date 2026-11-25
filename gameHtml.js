@@ -97,6 +97,105 @@ const GAME_HTML = `<!DOCTYPE html>
       z-index: 0;
     }
 
+    body.theme-wood {
+      --ink: #fffaf0;
+      --mute: #fde68a;
+      background: radial-gradient(ellipse at 50% 45%, #a85a2a 0%, #86401b 58%, #5c270d 100%);
+      background-size: 100% 100%;
+      animation: none;
+    }
+
+    body.theme-wood::before,
+    body.theme-wood::after {
+      display: none;
+    }
+
+    body.theme-wood #app {
+      padding: calc(34px + var(--sat)) 16px calc(38px + var(--sab));
+    }
+
+    body.theme-wood .title b {
+      text-shadow: 0 2px 6px rgba(32, 10, 0, 0.85);
+    }
+
+    body.theme-wood .title small {
+      text-shadow: 0 1px 4px rgba(32, 10, 0, 0.8);
+    }
+
+    body.theme-wood .lvl-prog-bar {
+      background: rgba(34, 10, 2, 0.5);
+      border-color: rgba(255, 224, 140, 0.38);
+    }
+
+    body.theme-wood #lvl-prog-fill {
+      background: linear-gradient(90deg, #ffd23f, #4ade80);
+      box-shadow: 0 0 8px rgba(255, 210, 63, 0.55);
+    }
+
+    body.theme-wood #board::before {
+      background: radial-gradient(circle, rgba(255, 200, 120, 0.14) 0%, rgba(255, 160, 70, 0.04) 52%, transparent 72%);
+    }
+
+    body.theme-wood .pw .ib {
+      background: linear-gradient(180deg, #fde68a 0%, #f59e0b 55%, #d97706 100%);
+      color: #451a03;
+      border: 2px solid #fffbeb;
+      box-shadow: 0 3px 0 #78350f, 0 4px 12px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.7);
+    }
+
+    body.theme-wood .pw .ib:active {
+      box-shadow: 0 1px 0 #78350f;
+    }
+
+    body.theme-wood #au.on {
+      background: linear-gradient(180deg, #4ade80 0%, #16a34a 100%);
+      color: #fff;
+      border-color: #dcfce7;
+      box-shadow: 0 3px 0 #14532d, 0 0 16px rgba(74, 222, 128, 0.75);
+    }
+
+    .garden-edge {
+      display: none;
+      position: fixed;
+      left: -10px;
+      right: -10px;
+      pointer-events: none;
+      z-index: 2;
+      filter: drop-shadow(0 4px 8px rgba(15, 35, 10, 0.45));
+    }
+
+    body.theme-wood .garden-edge {
+      display: block;
+    }
+
+    #garden-top {
+      top: -2px;
+      height: calc(46px + var(--sat));
+      animation: leafSwayTop 5s ease-in-out infinite;
+    }
+
+    #garden-bot {
+      bottom: -2px;
+      height: calc(46px + var(--sab));
+      animation: leafSwayBot 5.5s ease-in-out infinite;
+    }
+
+    .garden-edge svg {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    @keyframes leafSwayTop {
+      0%, 100% { transform: translateX(0px) rotate(0deg); }
+      50% { transform: translateX(4px) rotate(0.3deg); }
+    }
+
+    @keyframes leafSwayBot {
+      0%, 100% { transform: translateX(0px) rotate(0deg); }
+      50% { transform: translateX(-4px) rotate(-0.3deg); }
+    }
+
     #app {
       position: relative;
       z-index: 1;
@@ -755,11 +854,41 @@ const GAME_HTML = `<!DOCTYPE html>
       padding: 26px 22px;
     }
 
-    .mode-switch {
+    .mode-switch,
+    .theme-switch {
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 10px;
-      margin: 6px 0 18px;
+      margin: 6px 0 14px;
+    }
+
+    .theme-switch {
+      margin: 0 0 16px;
+    }
+
+    .theme-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+      padding: 9px 10px;
+      border-radius: 14px;
+      border: 2px solid rgba(183, 148, 255, 0.25);
+      background: rgba(21, 11, 51, 0.72);
+      color: var(--ink);
+      font: 600 13px 'Fredoka', sans-serif;
+      cursor: pointer;
+      transition: transform .15s, border-color .2s, background .2s, box-shadow .2s;
+    }
+
+    .theme-btn:active {
+      transform: scale(0.97);
+    }
+
+    .theme-btn.on {
+      border-color: #ffd23f;
+      background: linear-gradient(160deg, rgba(255, 210, 63, 0.2), rgba(124, 58, 237, 0.32));
+      box-shadow: 0 0 14px rgba(255, 210, 63, 0.28);
     }
 
     .mode-btn {
@@ -963,6 +1092,8 @@ const GAME_HTML = `<!DOCTYPE html>
 </head>
 <body>
   <canvas id="bg-canvas"></canvas>
+  <div id="garden-top" class="garden-edge" aria-hidden="true"></div>
+  <div id="garden-bot" class="garden-edge" aria-hidden="true"></div>
   <div id="app">
     <header>
       <div class="title">
@@ -996,6 +1127,10 @@ const GAME_HTML = `<!DOCTYPE html>
           <span class="mode-name">Shape Fill</span>
           <span class="mode-sub">Fill the shape</span>
         </button>
+      </div>
+      <div class="theme-switch" role="group" aria-label="Background theme">
+        <button type="button" class="theme-btn on" id="th-cosmic">🌌 Cosmic Blue</button>
+        <button type="button" class="theme-btn" id="th-wood">🌿 Wood Garden</button>
       </div>
       <p id="st-sub">Enter the level you want to start from</p><input id="lvin" type="number" inputmode="numeric" min="1"
         max="99999" value="1" aria-label="Start level"><br><button class="go" id="play">Play</button>
@@ -1031,12 +1166,13 @@ const GAME_HTML = `<!DOCTYPE html>
       '#ec4899', '#84cc16', '#3b82f6', '#a855f7', '#d97706', '#14532d'
     ];
     const CAP = 4, $ = s => document.getElementById(s), sleep = ms => new Promise(r => setTimeout(r, ms));
-    let mode = 'classic', L = 1, SL = 1, B = [], cov = [], els = [], sel = null, busy = false, hist = [], undos = 5, adds = 2, sound = true, ac = null;
+    let mode = 'classic', theme = 'cosmic', L = 1, SL = 1, B = [], cov = [], els = [], sel = null, busy = false, hist = [], undos = 5, adds = 2, sound = true, ac = null;
     let shapeState = null;
     try {
       L = Math.max(1, parseInt(localStorage.getItem('ws_level')) || 1);
       SL = Math.max(1, parseInt(localStorage.getItem('ws_shape_level')) || 1);
       if (localStorage.getItem('ws_mode') === 'shape') mode = 'shape';
+      if (localStorage.getItem('ws_theme') === 'wood') theme = 'wood';
     } catch (e) { }
     const curLv = () => mode === 'shape' ? SL : L;
     function setLv(v) {
@@ -2072,10 +2208,89 @@ const GAME_HTML = `<!DOCTYPE html>
     }
     $('m-classic').onclick = () => selectMode('classic');
     $('m-shape').onclick = () => selectMode('shape');
+    function selectTheme(nextTheme) {
+      theme = nextTheme === 'wood' ? 'wood' : 'cosmic';
+      try { localStorage.setItem('ws_theme', theme) } catch (e) { }
+      if ($('th-cosmic')) $('th-cosmic').classList.toggle('on', theme === 'cosmic');
+      if ($('th-wood')) $('th-wood').classList.toggle('on', theme === 'wood');
+      if (document.body && document.body.classList) document.body.classList.toggle('theme-wood', theme === 'wood');
+      if (!busy && B.length) render();
+    }
+    if ($('th-cosmic')) $('th-cosmic').onclick = () => selectTheme('cosmic');
+    if ($('th-wood')) $('th-wood').onclick = () => selectTheme('wood');
+    function buildGardenSvg(isBot, vbW) {
+      const p = isBot ? 'b' : 't';
+      const R = rng(isBot ? 9402 : 4209);
+      const greensBack = ['#14532d', '#166534'];
+      const greensMid = ['#15803d', '#16a34a'];
+      const greensTop = ['#22c55e', '#4ade80'];
+      const baseEdgeY = isBot ? 76 : 0;
+      const waveDir = isBot ? -1 : 1;
+      let waveBack = 'M-20,' + baseEdgeY;
+      let waveFront = 'M-20,' + baseEdgeY;
+      for (let x = -20; x <= vbW + 24; x += 22) {
+        const y1 = baseEdgeY + waveDir * (24 + R() * 14);
+        const y2 = baseEdgeY + waveDir * (14 + R() * 12);
+        waveBack += ' L' + x + ',' + y1.toFixed(1);
+        waveFront += ' L' + x + ',' + y2.toFixed(1);
+      }
+      waveBack += ' L' + (vbW + 24) + ',' + baseEdgeY + ' Z';
+      waveFront += ' L' + (vbW + 24) + ',' + baseEdgeY + ' Z';
+      let leavesBack = '', leavesMid = '', leavesFront = '', flowers = '';
+      const baseRot = isBot ? 180 : 0;
+      for (let x = -8; x <= vbW + 14; x += 15) {
+        const yB = isBot ? (78 - R() * 20) : (-2 + R() * 20);
+        const aB = baseRot + (R() - 0.5) * 98;
+        const sB = (0.95 + R() * 0.45).toFixed(2);
+        const cB = greensBack[Math.floor(R() * greensBack.length)];
+        leavesBack += '<use href="#lf-' + p + '" fill="' + cB + '" transform="translate(' + x.toFixed(1) + ',' + yB.toFixed(1) + ') rotate(' + aB.toFixed(1) + ') scale(' + sB + ')"/>';
+
+        const xM = x + (R() - 0.5) * 8;
+        const yM = isBot ? (74 - R() * 26) : (2 + R() * 24);
+        const aM = baseRot + (R() - 0.5) * 104;
+        const sM = (0.82 + R() * 0.42).toFixed(2);
+        const cM = greensMid[Math.floor(R() * greensMid.length)];
+        leavesMid += '<use href="#lf-' + p + '" fill="' + cM + '" transform="translate(' + xM.toFixed(1) + ',' + yM.toFixed(1) + ') rotate(' + aM.toFixed(1) + ') scale(' + sM + ')"/>';
+
+        if (R() < 0.72) {
+          const xF = x + (R() - 0.5) * 10;
+          const yF = isBot ? (70 - R() * 26) : (4 + R() * 24);
+          const aF = baseRot + (R() - 0.5) * 96;
+          const sF = (0.68 + R() * 0.36).toFixed(2);
+          const cF = greensTop[Math.floor(R() * greensTop.length)];
+          leavesFront += '<use href="#lf-' + p + '" fill="' + cF + '" transform="translate(' + xF.toFixed(1) + ',' + yF.toFixed(1) + ') rotate(' + aF.toFixed(1) + ') scale(' + sF + ')"/>';
+        }
+      }
+      for (let x = 18; x <= vbW - 14; x += 40) {
+        const fx = x + (R() - 0.5) * 18;
+        const fy = isBot ? (38 + R() * 25) : (13 + R() * 25);
+        const fs = (0.72 + R() * 0.42).toFixed(2);
+        const fr = (R() * 72).toFixed(1);
+        flowers += '<use href="#fl-' + p + '" transform="translate(' + fx.toFixed(1) + ',' + fy.toFixed(1) + ') rotate(' + fr + ') scale(' + fs + ')"/>';
+      }
+      const defs = '<defs>' +
+        '<g id="lf-' + p + '"><path d="M0,0 C9,6 10,19 0,28 C-10,19 -9,6 0,0 Z"/><path d="M0,4 L0,23" fill="none" stroke="rgba(220,252,231,0.28)" stroke-width="1.1" stroke-linecap="round"/></g>' +
+        '<g id="fl-' + p + '"><circle cx="0" cy="-4.1" r="2.7" fill="#f1f5f9"/><circle cx="3.9" cy="-1.3" r="2.7" fill="#ffffff"/><circle cx="2.4" cy="3.3" r="2.7" fill="#f1f5f9"/><circle cx="-2.4" cy="3.3" r="2.7" fill="#ffffff"/><circle cx="-3.9" cy="-1.3" r="2.7" fill="#ffffff"/><circle cx="0" cy="0" r="2.2" fill="#facc15"/><circle cx="0" cy="0" r="1.0" fill="#f59e0b"/></g>' +
+        '</defs>';
+      return '<svg viewBox="0 0 ' + vbW + ' 76" preserveAspectRatio="' + (isBot ? 'xMidYMax slice' : 'xMidYMin slice') + '">' +
+        defs +
+        '<path d="' + waveBack + '" fill="#14532d"/>' +
+        leavesBack +
+        '<path d="' + waveFront + '" fill="#166534" opacity="0.92"/>' +
+        leavesMid + leavesFront + flowers +
+        '</svg>';
+    }
+    function initGardenBorders() {
+      const vw = (typeof window !== 'undefined' && window.innerWidth) ? window.innerWidth : 420;
+      const vbW = Math.max(520, Math.round((vw + 20) * 76 / 46));
+      if ($('garden-top')) $('garden-top').innerHTML = buildGardenSvg(false, vbW);
+      if ($('garden-bot')) $('garden-bot').innerHTML = buildGardenSvg(true, vbW);
+    }
     function openStart() {
       auto = false; $('au').classList.remove('on'); SP = 1.42;
       lvinEdited = false;
       selectMode(mode);
+      selectTheme(theme);
       $('st').classList.remove('off');
       setTimeout(() => { $('lvin').focus(); $('lvin').select() }, 50);
     }
@@ -2149,7 +2364,7 @@ const GAME_HTML = `<!DOCTYPE html>
       const auroraIndigo = createAuroraSprite(258, 88, 62, 0.28);
       const auroraBlue = createAuroraSprite(222, 92, 58, 0.26);
 
-      let waveGradA = null, waveGradB = null;
+      let waveGradA = null, waveGradB = null, woodCanvas = null;
       function updateWaveGrads() {
         waveGradA = ctx.createLinearGradient(0, H * 0.25, 0, H);
         waveGradA.addColorStop(0, 'rgba(56, 189, 248, 0.13)');
@@ -2162,6 +2377,88 @@ const GAME_HTML = `<!DOCTYPE html>
         waveGradB.addColorStop(1, 'rgba(6, 9, 30, 0.02)');
       }
 
+      // Pre-render realistic wooden planks with grain & warm glow into offscreen canvas
+      function buildWoodCanvas() {
+        if (!W || !H) return;
+        const wc = document.createElement('canvas');
+        wc.width = Math.max(1, Math.round(W * dpr));
+        wc.height = Math.max(1, Math.round(H * dpr));
+        const wctx = wc.getContext('2d');
+        wctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+        const plankH = Math.max(78, Math.round(H / 8.5));
+        const plankCount = Math.ceil(H / plankH);
+        const palette = [
+          ['#9d5224', '#864219', '#6e3210'],
+          ['#a55828', '#8d471d', '#753612'],
+          ['#934a1f', '#7d3c16', '#652d0e'],
+          ['#aa5d2b', '#914a1e', '#773814']
+        ];
+
+        for (let p = 0; p < plankCount; p++) {
+          const R = rng(5173 + p * 89);
+          const py = p * plankH;
+          const colors = palette[Math.floor(R() * palette.length)];
+          const pGrad = wctx.createLinearGradient(0, py, 0, py + plankH);
+          pGrad.addColorStop(0, colors[0]);
+          pGrad.addColorStop(0.55, colors[1]);
+          pGrad.addColorStop(1, colors[2]);
+          wctx.fillStyle = pGrad;
+          wctx.fillRect(0, py, W, plankH + 1);
+
+          // Organic horizontal wood grain fibers
+          const grainCount = 18 + Math.floor(R() * 8);
+          for (let g = 0; g < grainCount; g++) {
+            const baseY = py + 5 + R() * (plankH - 10);
+            const isLight = R() < 0.28;
+            const alpha = isLight ? (0.07 + R() * 0.09) : (0.10 + R() * 0.16);
+            wctx.strokeStyle = isLight ? ('rgba(248, 186, 112, ' + alpha.toFixed(3) + ')') : ('rgba(42, 15, 4, ' + alpha.toFixed(3) + ')');
+            wctx.lineWidth = 0.8 + R() * 1.7;
+            const freq = 0.008 + R() * 0.012;
+            const amp = 1.2 + R() * 3.4;
+            const ph = R() * Math.PI * 2;
+            wctx.beginPath();
+            for (let x = 0; x <= W + 18; x += 18) {
+              const cx = Math.min(x, W);
+              const cy = baseY + Math.sin(cx * freq + ph) * amp;
+              if (x === 0) wctx.moveTo(cx, cy);
+              else wctx.lineTo(cx, cy);
+            }
+            wctx.stroke();
+          }
+
+          // Subtle occasional wood knot
+          if (R() < 0.45) {
+            const kx = W * (0.14 + R() * 0.72);
+            const ky = py + plankH * (0.32 + R() * 0.36);
+            const krx = 14 + R() * 14;
+            const kry = 4 + R() * 3.5;
+            for (let ring = 3; ring >= 1; ring--) {
+              wctx.beginPath();
+              wctx.ellipse(kx, ky, krx * (ring / 3), kry * (ring / 3), (R() - 0.5) * 0.08, 0, Math.PI * 2);
+              wctx.strokeStyle = 'rgba(42, 15, 4, ' + (0.12 + (4 - ring) * 0.06).toFixed(2) + ')';
+              wctx.lineWidth = 1.1;
+              wctx.stroke();
+            }
+          }
+
+          // Top tongue bevel highlight & bottom dark plank groove
+          wctx.fillStyle = 'rgba(255, 205, 140, 0.20)';
+          wctx.fillRect(0, py, W, 1.3);
+          wctx.fillStyle = 'rgba(34, 11, 2, 0.72)';
+          wctx.fillRect(0, py + plankH - 1.6, W, 1.8);
+        }
+
+        // Warm sunlit center glow + rich vignette
+        const vig = wctx.createRadialGradient(W * 0.5, H * 0.45, Math.min(W, H) * 0.08, W * 0.5, H * 0.5, Math.max(W, H) * 0.78);
+        vig.addColorStop(0, 'rgba(255, 202, 122, 0.16)');
+        vig.addColorStop(0.55, 'rgba(0, 0, 0, 0)');
+        vig.addColorStop(1, 'rgba(24, 7, 1, 0.44)');
+        wctx.fillStyle = vig;
+        wctx.fillRect(0, 0, W, H);
+        woodCanvas = wc;
+      }
+
       function resize() {
         dpr = Math.min(window.devicePixelRatio || 1, 1.25);
         W = window.innerWidth;
@@ -2170,6 +2467,8 @@ const GAME_HTML = `<!DOCTYPE html>
         cv.height = Math.round(H * dpr);
         ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
         updateWaveGrads();
+        buildWoodCanvas();
+        initGardenBorders();
       }
       resize();
       window.addEventListener('resize', resize);
@@ -2208,7 +2507,7 @@ const GAME_HTML = `<!DOCTYPE html>
       }
 
       window.addEventListener('pointerdown', (e) => {
-        if (bubbles.length < BUBBLE_COUNT + 5) {
+        if (theme !== 'wood' && bubbles.length < BUBBLE_COUNT + 5) {
           bubbles.push({
             x: e.clientX,
             y: e.clientY,
@@ -2250,37 +2549,43 @@ const GAME_HTML = `<!DOCTYPE html>
 
       function loop(now) {
         const t = (now || performance.now()) * 0.001;
+        const isWood = theme === 'wood';
         ctx.clearRect(0, 0, W, H);
 
-        // Full-display drifting aurora gradient blobs
-        const s1 = Math.max(W, H) * 0.9;
-        const s2 = Math.max(W, H) * 0.85;
-        const s3 = Math.max(W, H) * 0.8;
-        ctx.drawImage(auroraIndigo, W * (0.5 + 0.34 * Math.sin(t * 0.42)) - s1 * 0.5, H * (0.35 + 0.28 * Math.cos(t * 0.31)) - s1 * 0.5, s1, s1);
-        ctx.drawImage(auroraAqua, W * (0.48 + 0.36 * Math.cos(t * 0.36)) - s2 * 0.5, H * (0.62 + 0.28 * Math.sin(t * 0.47)) - s2 * 0.5, s2, s2);
-        ctx.drawImage(auroraBlue, W * (0.52 + 0.32 * Math.sin(t * 0.29 + 2.1)) - s3 * 0.5, H * (0.5 + 0.32 * Math.cos(t * 0.38 + 1.2)) - s3 * 0.5, s3, s3);
+        if (isWood) {
+          if (woodCanvas) ctx.drawImage(woodCanvas, 0, 0, W, H);
+        } else {
+          // Full-display drifting aurora gradient blobs
+          const s1 = Math.max(W, H) * 0.9;
+          const s2 = Math.max(W, H) * 0.85;
+          const s3 = Math.max(W, H) * 0.8;
+          ctx.drawImage(auroraIndigo, W * (0.5 + 0.34 * Math.sin(t * 0.42)) - s1 * 0.5, H * (0.35 + 0.28 * Math.cos(t * 0.31)) - s1 * 0.5, s1, s1);
+          ctx.drawImage(auroraAqua, W * (0.48 + 0.36 * Math.cos(t * 0.36)) - s2 * 0.5, H * (0.62 + 0.28 * Math.sin(t * 0.47)) - s2 * 0.5, s2, s2);
+          ctx.drawImage(auroraBlue, W * (0.52 + 0.32 * Math.sin(t * 0.29 + 2.1)) - s3 * 0.5, H * (0.5 + 0.32 * Math.cos(t * 0.38 + 1.2)) - s3 * 0.5, s3, s3);
 
-        // Full-display flowing liquid gradient waves
-        drawWave(H * 0.42, 28, 0.007, t * 0.9, waveGradA);
-        drawWave(H * 0.68, 34, 0.0055, -t * 0.75 + 1.4, waveGradB);
+          // Full-display flowing liquid gradient waves
+          drawWave(H * 0.42, 28, 0.007, t * 0.9, waveGradA);
+          drawWave(H * 0.68, 34, 0.0055, -t * 0.75 + 1.4, waveGradB);
+        }
 
         // Soft glowing motes across full screen
+        ctx.fillStyle = isWood ? '#fde68a' : '#e0f2fe';
         for (let i = 0; i < motes.length; i++) {
           const m = motes[i];
-          m.x += m.vx;
-          m.y += m.vy;
-          m.phase += m.speed;
+          m.x += isWood ? (m.vx * 0.75 + Math.sin(t * 0.6 + m.phase) * 0.08) : m.vx;
+          m.y += isWood ? m.vy * 0.65 : m.vy;
+          m.phase += isWood ? m.speed * 0.85 : m.speed;
           if (m.y < -10) { m.y = H + 10; m.x = Math.random() * W; }
           if (m.x < -10) m.x = W + 10;
           if (m.x > W + 10) m.x = -10;
-          ctx.globalAlpha = 0.2 + 0.45 * (0.5 + 0.5 * Math.sin(m.phase));
-          ctx.fillStyle = '#e0f2fe';
+          ctx.globalAlpha = (isWood ? 0.16 : 0.2) + (isWood ? 0.36 : 0.45) * (0.5 + 0.5 * Math.sin(m.phase));
           ctx.beginPath();
           ctx.arc(m.x, m.y, m.r, 0, Math.PI * 2);
           ctx.fill();
         }
         ctx.globalAlpha = 1.0;
 
+        const rippleRgb = isWood ? '255, 224, 150' : '180, 230, 255';
         for (let i = ripples.length - 1; i >= 0; i--) {
           const rp = ripples[i];
           rp.r += 1.8;
@@ -2291,37 +2596,41 @@ const GAME_HTML = `<!DOCTYPE html>
           }
           ctx.beginPath();
           ctx.arc(rp.x, rp.y, rp.r, 0, Math.PI * 2);
-          ctx.strokeStyle = 'rgba(180, 230, 255, ' + rp.alpha.toFixed(3) + ')';
+          ctx.strokeStyle = 'rgba(' + rippleRgb + ', ' + rp.alpha.toFixed(3) + ')';
           ctx.lineWidth = 1.5;
           ctx.stroke();
         }
 
-        for (let i = 0; i < bubbles.length; i++) {
-          const b = bubbles[i];
-          b.wobble += b.wobbleSpeed;
-          b.x += Math.sin(b.wobble) * b.wobbleAmp;
-          b.y -= b.speed;
+        if (!isWood) {
+          for (let i = 0; i < bubbles.length; i++) {
+            const b = bubbles[i];
+            b.wobble += b.wobbleSpeed;
+            b.x += Math.sin(b.wobble) * b.wobbleAmp;
+            b.y -= b.speed;
 
-          if (b.y < -b.r * 2) {
-            if (b.burst) {
-              bubbles.splice(i, 1);
-              i--;
-              continue;
+            if (b.y < -b.r * 2) {
+              if (b.burst) {
+                bubbles.splice(i, 1);
+                i--;
+                continue;
+              }
+              b.y = H + b.r * 2;
+              b.x = Math.random() * W;
             }
-            b.y = H + b.r * 2;
-            b.x = Math.random() * W;
-          }
 
-          ctx.globalAlpha = b.alpha;
-          const diam = b.r * 2.2;
-          ctx.drawImage(b.sprite, b.x - b.r * 1.1, b.y - b.r * 1.1, diam, diam);
+            ctx.globalAlpha = b.alpha;
+            const diam = b.r * 2.2;
+            ctx.drawImage(b.sprite, b.x - b.r * 1.1, b.y - b.r * 1.1, diam, diam);
+          }
+          ctx.globalAlpha = 1.0;
         }
-        ctx.globalAlpha = 1.0;
 
         requestAnimationFrame(loop);
       }
       requestAnimationFrame(loop);
     })();
+    initGardenBorders();
+    selectTheme(theme);
     build();
     openStart();
   </script>
