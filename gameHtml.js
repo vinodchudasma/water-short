@@ -166,6 +166,9 @@ const GAME_HTML = `<!DOCTYPE html>
       right: -12px;
       pointer-events: none;
       z-index: 2;
+      will-change: transform;
+      transform: translateZ(0);
+      contain: layout style;
     }
 
     body.theme-wood .garden-edge {
@@ -175,14 +178,12 @@ const GAME_HTML = `<!DOCTYPE html>
     #garden-top {
       top: -4px;
       height: calc(56px + var(--sat) * 0.45);
-      filter: drop-shadow(0 5px 10px rgba(20, 8, 2, 0.58));
       animation: leafSwayTop 5s ease-in-out infinite;
     }
 
     #garden-bot {
       bottom: -4px;
       height: calc(54px + var(--sab));
-      filter: drop-shadow(0 -5px 10px rgba(20, 8, 2, 0.55));
       animation: leafSwayBot 5.5s ease-in-out infinite;
     }
 
@@ -208,7 +209,7 @@ const GAME_HTML = `<!DOCTYPE html>
       height: 100%;
       display: flex;
       flex-direction: column;
-      max-width: 620px;
+      max-width: min(1320px, 97vw);
       margin: 0 auto;
       padding: calc(16px + var(--sat)) 10px calc(18px + var(--sab))
     }
@@ -409,7 +410,6 @@ const GAME_HTML = `<!DOCTYPE html>
       opacity: 0;
       transform: translateY(-24px);
       transition: transform .42s cubic-bezier(.34, 1.35, .64, 1), opacity .2s ease-out;
-      filter: drop-shadow(0 3px 5px rgba(0, 0, 0, .45));
       pointer-events: none;
     }
 
@@ -964,6 +964,22 @@ const GAME_HTML = `<!DOCTYPE html>
       gap: var(--sgap, var(--cgap, 16px));
     }
 
+    .shape-landscape {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: var(--mgap, 28px);
+      width: 100%;
+    }
+
+    .shape-wing {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: var(--rgap, 28px);
+    }
+
     .shape-wrap {
       position: relative;
       width: var(--sw, 148px);
@@ -974,8 +990,21 @@ const GAME_HTML = `<!DOCTYPE html>
       justify-content: center;
       cursor: pointer;
       touch-action: manipulation;
-      transition: transform .28s cubic-bezier(.3, .7, .3, 1), filter .3s;
-      filter: drop-shadow(0 12px 24px rgba(0, 0, 0, 0.45));
+      transition: transform .28s cubic-bezier(.3, .7, .3, 1);
+      will-change: transform;
+      contain: layout style;
+    }
+
+    .shape-wrap::before {
+      content: "";
+      position: absolute;
+      inset: -14px;
+      border-radius: 50%;
+      background: radial-gradient(circle, var(--scol, rgba(56, 189, 248, 0.7)) 0%, rgba(0, 0, 0, 0) 68%);
+      opacity: 0;
+      z-index: -1;
+      pointer-events: none;
+      transition: opacity .28s ease-out, transform .28s ease-out;
     }
 
     .shape-wrap:active {
@@ -984,11 +1013,15 @@ const GAME_HTML = `<!DOCTYPE html>
 
     .shape-wrap.ready {
       transform: scale(1.04);
-      filter: drop-shadow(0 0 22px var(--scol, rgba(56, 189, 248, 0.75)));
     }
 
-    .shape-wrap.done {
-      filter: drop-shadow(0 0 24px var(--scol, rgba(255, 210, 63, 0.85)));
+    .shape-wrap.ready::before {
+      opacity: 0.42;
+      transform: scale(1.04);
+    }
+
+    .shape-wrap.done::before {
+      opacity: 0.48;
     }
 
     .shape-wrap svg {
@@ -1004,10 +1037,12 @@ const GAME_HTML = `<!DOCTYPE html>
     }
 
     .shape-wave-a {
+      will-change: transform;
       animation: waveSlideA 2.8s linear infinite;
     }
 
     .shape-wave-b {
+      will-change: transform;
       animation: waveSlideB 4.1s linear infinite;
     }
 
@@ -1022,6 +1057,7 @@ const GAME_HTML = `<!DOCTYPE html>
     }
 
     .shape-bub {
+      will-change: transform, opacity;
       animation: shapeBub 3.2s ease-in infinite;
     }
 
@@ -1631,7 +1667,9 @@ const GAME_HTML = `<!DOCTYPE html>
       const shInit = { id: p.sh.id, name: p.sh.name, cap: p.cap, color: p.targetColor, units: p.initUnits, initUnits: p.initUnits, other: p.other };
       const minMoves = Math.min(36, Math.max(5, Math.floor(filledCount * 1.4)));
       let best = null;
+      const genDeadline = performance.now() + 260;
       for (let attempt = 0; attempt < 30; attempt++) {
+        if (attempt > 0 && performance.now() > genDeadline) break;
         const r = rng(l * 8923 + 37 + attempt * 131);
         const b = Array.from({ length: filledCount }, () => []);
         // Place at most 1 T per bottle first (at k=0 or k=1) so T is NEVER stacked [T,T,T]
@@ -1913,8 +1951,77 @@ const GAME_HTML = `<!DOCTYPE html>
       { const s = $('stream'); s.getAnimations().forEach(x => x.cancel()); s.style.display = 'none'; }
       const aw = Math.max(260, bd.clientWidth - 8);
       const ah = Math.max(260, bd.clientHeight - 24);
+      const isLandscape = aw >= 720 && aw >= ah * 1.18;
       const root = document.documentElement.style;
-      if (shapeState) {
+      function createShapeEl(shDef) {
+        const shWrap = document.createElement('div');
+        shWrap.id = 'shape-wrap';
+        shWrap.className = 'shape-wrap';
+        shWrap.tabIndex = 0;
+        shWrap.setAttribute('role', 'button');
+        shWrap.setAttribute('aria-label', shapeState.name + ' target container');
+        shWrap.innerHTML = buildShapeHtml(shDef, COL[shapeState.color]);
+        shWrap.onclick = tapShape;
+        shWrap.onkeydown = ev => { if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); tapShape() } };
+        return shWrap;
+      }
+      if (shapeState && isLandscape) {
+        bd.classList.remove('board-dense');
+        bd.classList.add('board-shape');
+        const leftN = Math.floor(n / 2);
+        const rightN = n - leftN;
+        const wingRows = rightN <= 4 ? 1 : 2;
+        const leftCols = wingRows === 1 ? Math.max(1, leftN) : Math.ceil(leftN / 2);
+        const rightCols = wingRows === 1 ? Math.max(1, rightN) : Math.ceil(rightN / 2);
+        const totalSideCols = leftCols + rightCols;
+        const wingGapCount = Math.max(0, leftCols - 1) + Math.max(0, rightCols - 1);
+        const shapeMaxW = Math.min(276, aw * 0.25);
+        const shapeSize = Math.min(shapeMaxW, Math.max(150, ah * 0.56));
+        const shapeH = shapeSize * 1.05;
+        const minRowGap = wingRows > 1 ? 26 : 0;
+        const shapeClear = Math.max(48, Math.min(92, aw * 0.068));
+        const gapRatio = totalSideCols >= 11 ? (aw < 940 ? 0.36 : 0.48) : 0.60;
+        const bwByW = (aw - 16 - shapeSize - shapeClear) / (totalSideCols + wingGapCount * gapRatio);
+        const bhMax = (ah - (wingRows - 1) * minRowGap) / wingRows;
+        let bw = Math.min(54, bwByW, bhMax / 2.45);
+        let bh = Math.min(bhMax, bw * 2.52, wingRows === 1 ? 148 : 132);
+        if (bh < 52) {
+          bh = Math.max(46, bhMax);
+          bw = Math.min(bw, bh / 2.35);
+        }
+        const sideFree = Math.max(24, aw - 16 - shapeSize - totalSideCols * bw);
+        const wingSpan = Math.max(wingGapCount, 1);
+        const mgap = Math.min(52, Math.max(20, Math.floor(sideFree * (wingGapCount ? 0.14 : 0.42))));
+        const cgap = wingGapCount ? Math.min(36, Math.max(11, ((sideFree - 2 * mgap) / wingSpan) * 0.90)) : 20;
+        const rgap = wingRows > 1 ? Math.min(46, Math.max(minRowGap, Math.floor((ah - bh * wingRows) * 0.34))) : 0;
+
+        root.setProperty('--bw', bw.toFixed(1) + 'px');
+        root.setProperty('--bh', bh.toFixed(1) + 'px');
+        root.setProperty('--cgap', cgap.toFixed(1) + 'px');
+        root.setProperty('--mgap', mgap + 'px');
+        root.setProperty('--rgap', rgap + 'px');
+        root.setProperty('--sw', shapeSize.toFixed(1) + 'px');
+        root.setProperty('--sh', shapeH.toFixed(1) + 'px');
+        root.setProperty('--scol', COL[shapeState.color]);
+
+        function buildWing(startIdx, count, cols) {
+          const wing = document.createElement('div');
+          wing.className = 'shape-wing';
+          let row;
+          for (let k = 0; k < count; k++) {
+            if (k % cols === 0) { row = document.createElement('div'); row.className = 'row'; wing.appendChild(row); }
+            const idx = startIdx + k;
+            const e = makeBottleEl(idx); row.appendChild(e); els[idx] = e;
+          }
+          return wing;
+        }
+        const shDef = findShape(shapeState.id);
+        const wrap = document.createElement('div'); wrap.className = 'shape-landscape';
+        if (leftN > 0) wrap.appendChild(buildWing(0, leftN, leftCols));
+        wrap.appendChild(createShapeEl(shDef));
+        if (rightN > 0) wrap.appendChild(buildWing(leftN, rightN, rightCols));
+        bd.appendChild(wrap);
+      } else if (shapeState) {
         bd.classList.remove('board-dense');
         bd.classList.add('board-shape');
         const sidePairs = (n >= 16 && aw >= 330) ? 2 : (n >= 4 ? 1 : 0);
@@ -1982,16 +2089,7 @@ const GAME_HTML = `<!DOCTYPE html>
           midRow.appendChild(leftSide);
         }
         const shDef = findShape(shapeState.id);
-        const shWrap = document.createElement('div');
-        shWrap.id = 'shape-wrap';
-        shWrap.className = 'shape-wrap';
-        shWrap.tabIndex = 0;
-        shWrap.setAttribute('role', 'button');
-        shWrap.setAttribute('aria-label', shapeState.name + ' target container');
-        shWrap.innerHTML = buildShapeHtml(shDef, COL[shapeState.color]);
-        shWrap.onclick = tapShape;
-        shWrap.onkeydown = ev => { if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); tapShape() } };
-        midRow.appendChild(shWrap);
+        midRow.appendChild(createShapeEl(shDef));
         if (sidePairs) {
           const rightSide = document.createElement('div'); rightSide.className = 'shape-side';
           for (let k = 0; k < sidePairs; k++) {
@@ -2009,23 +2107,25 @@ const GAME_HTML = `<!DOCTYPE html>
         }
       } else {
         bd.classList.remove('board-shape');
-        bd.classList.toggle('board-dense', n >= 15);
-        const rows = n <= 5 ? 1 : (n <= 14 ? 2 : (n <= 21 ? 3 : 4));
-        const perRow = n <= 5 ? n : Math.ceil(n / rows);
+        bd.classList.toggle('board-dense', !isLandscape && n >= 15);
+        const rows = isLandscape
+          ? (n <= 9 ? 1 : (aw >= 1020 && n <= 26 ? 2 : (n <= 20 ? 2 : 3)))
+          : (n <= 5 ? 1 : (n <= 14 ? 2 : (n <= 21 ? 3 : 4)));
+        const perRow = rows === 1 ? n : Math.ceil(n / rows);
         const totalVGaps = Math.max(0, rows - 1);
         const minRowGap = rows > 1 ? 26 : 0;
         const gapRatio = perRow >= 6 ? 0.56 : 0.65;
-        const bwMax = Math.min(54, (aw - 10) / (perRow + gapRatio * (perRow - 1)));
+        const bwMax = Math.min(isLandscape ? 58 : 54, (aw - 10) / (perRow + gapRatio * (perRow - 1)));
         const bhMax = (ah - totalVGaps * minRowGap) / rows;
         let bw = Math.min(bwMax, bhMax / 2.65);
-        let bh = Math.min(bhMax, bw * 2.65);
+        let bh = Math.min(bhMax, bw * 2.65, isLandscape ? 148 : 999);
         if (bh < 48) {
           bh = Math.max(44, bhMax);
           bw = Math.min(bwMax, bh / 2.5);
         }
         const rowFree = Math.max(0, aw - 12 - perRow * bw);
-        const cgap = Math.min(34, Math.max(15, perRow > 1 ? (rowFree / (perRow - 1)) * 0.85 : 22));
-        const rgap = totalVGaps ? Math.min(44, Math.max(minRowGap, Math.floor((ah - bh * rows) / totalVGaps))) : 0;
+        const cgap = Math.min(isLandscape ? 42 : 34, Math.max(15, perRow > 1 ? (rowFree / (perRow - 1)) * 0.85 : 22));
+        const rgap = totalVGaps ? Math.min(48, Math.max(minRowGap, Math.floor((ah - bh * rows) / totalVGaps))) : 0;
         root.setProperty('--bw', bw.toFixed(1) + 'px');
         root.setProperty('--bh', bh.toFixed(1) + 'px');
         root.setProperty('--cgap', cgap.toFixed(1) + 'px');
@@ -2886,8 +2986,20 @@ const GAME_HTML = `<!DOCTYPE html>
         ctx.fill();
       }
 
+      let lastDraw = 0, lastBgTheme = '';
+      const stEl = $('st'), winEl = $('win');
       function loop(now) {
-        const t = (now || performance.now()) * 0.001;
+        const ts = now || performance.now();
+        if (document.hidden) { requestAnimationFrame(loop); return; }
+        const modalOpen = (stEl && !stEl.classList.contains('off')) || (winEl && winEl.classList.contains('on'));
+        const minGap = modalOpen ? 120 : (isMobile ? 32 : 0);
+        if (theme === lastBgTheme && lastDraw > 0 && ts - lastDraw < minGap) {
+          requestAnimationFrame(loop);
+          return;
+        }
+        lastBgTheme = theme;
+        lastDraw = ts;
+        const t = ts * 0.001;
         const isWood = theme === 'wood';
         ctx.clearRect(0, 0, W, H);
 
