@@ -67,15 +67,17 @@ const GAME_HTML = `<!DOCTYPE html>
       height: 100%;
       display: flex;
       flex-direction: column;
-      max-width: 540px;
+      max-width: 620px;
       margin: 0 auto;
-      padding: 16px 16px 20px
+      padding: 16px 16px 18px
     }
 
     header {
       display: flex;
       align-items: center;
-      justify-content: space-between
+      justify-content: space-between;
+      padding-top: 6px;
+      margin-bottom: 4px;
     }
 
     .title {
@@ -124,8 +126,8 @@ const GAME_HTML = `<!DOCTYPE html>
       flex-direction: column;
       justify-content: center;
       align-items: center;
-      gap: min(32px, calc(var(--bh)*.28));
-      margin-top: 36px;
+      gap: min(38px, calc(var(--bh)*.32));
+      margin-top: 24px;
     }
 
     #board::before {
@@ -134,21 +136,15 @@ const GAME_HTML = `<!DOCTYPE html>
       width: min(92vw, 440px);
       height: min(92vw, 440px);
       border-radius: 50%;
-      background: radial-gradient(circle, rgba(147, 51, 234, 0.18) 0%, rgba(34, 211, 238, 0.07) 50%, transparent 72%);
-      filter: blur(48px);
+      background: radial-gradient(circle, rgba(147, 51, 234, 0.16) 0%, rgba(34, 211, 238, 0.05) 50%, transparent 70%);
       z-index: -1;
       pointer-events: none;
-      animation: ambientPulse 8s ease-in-out infinite alternate;
-    }
-
-    @keyframes ambientPulse {
-      0% { transform: scale(0.92); opacity: 0.65; }
-      100% { transform: scale(1.12); opacity: 0.95; }
+      transform: translateZ(0);
     }
 
     .row {
       display: flex;
-      gap: calc(var(--bw)*.4);
+      gap: calc(var(--bw)*.46);
       justify-content: center
     }
 
@@ -158,6 +154,9 @@ const GAME_HTML = `<!DOCTYPE html>
       height: var(--bh);
       border-radius: 0 0 calc(var(--bw)*.5) calc(var(--bw)*.5);
       border: 2px solid var(--glass);
+      will-change: transform;
+      transform: translateZ(0);
+      contain: layout;
       border-top-width: 0;
       background: linear-gradient(90deg, #ffffff1c, #ffffff05 40%, #0003);
       transition: transform .4s cubic-bezier(.3, .7, .3, 1);
@@ -220,16 +219,16 @@ const GAME_HTML = `<!DOCTYPE html>
 
     .cork {
       position: absolute;
-      left: -4px;
-      right: -4px;
-      top: -18px;
-      height: 24px;
+      left: 0;
+      right: 0;
+      top: -10px;
+      height: 26px;
       z-index: 4;
       opacity: 0;
-      transform: translateY(-28px);
-      transition: transform .45s cubic-bezier(.34, 1.4, .64, 1), opacity .2s ease-out;
-      filter: drop-shadow(0 4px 6px rgba(0, 0, 0, .5));
-      pointer-events: none
+      transform: translateY(-24px);
+      transition: transform .42s cubic-bezier(.34, 1.35, .64, 1), opacity .2s ease-out;
+      filter: drop-shadow(0 3px 5px rgba(0, 0, 0, .45));
+      pointer-events: none;
     }
 
     .cork::before {
@@ -238,27 +237,31 @@ const GAME_HTML = `<!DOCTYPE html>
       left: -2px;
       right: -2px;
       top: 0;
-      height: 11px;
-      border-radius: 7px;
-      background: linear-gradient(180deg, #eed8b8 0%, #d4a572 60%, #b2804b 100%);
-      box-shadow: inset 0 1px 1px #fff9, 0 2px 3px rgba(0, 0, 0, .35)
+      height: 9px;
+      border-radius: 5px 5px 2px 2px;
+      background:
+        repeating-linear-gradient(90deg, transparent 0px, transparent 4px, rgba(100, 55, 20, 0.1) 4px, rgba(100, 55, 20, 0.1) 5px),
+        linear-gradient(180deg, #eed2af 0%, #caa06d 40%, #a8733a 100%);
+      box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.75), inset -2px 0 2px rgba(0, 0, 0, 0.2), 0 2px 3px rgba(0, 0, 0, 0.35);
     }
 
     .cork::after {
       content: "";
       position: absolute;
-      left: 7px;
-      right: 7px;
-      top: 10px;
-      height: 12px;
+      left: 3px;
+      right: 3px;
+      top: 8px;
+      height: 15px;
       border-radius: 0 0 4px 4px;
-      background: linear-gradient(90deg, #8d5828 0%, #c18b52 25%, #e4b584 55%, #a8723c 85%, #76441b 100%);
-      box-shadow: inset 0 2px 3px rgba(0, 0, 0, .35)
+      background:
+        repeating-linear-gradient(90deg, transparent 0px, transparent 3px, rgba(90, 45, 15, 0.12) 3px, rgba(90, 45, 15, 0.12) 4px),
+        linear-gradient(90deg, #945d27 0%, #caa06d 22%, #e5c396 42%, #ba884e 72%, #7a4616 100%);
+      box-shadow: inset 0 3px 4px rgba(0, 0, 0, 0.4), inset 0 -2px 2px rgba(0, 0, 0, 0.25), 0 3px 5px rgba(0, 0, 0, 0.3);
     }
 
     .done .cork {
-      transform: translateY(10px);
-      opacity: 1
+      transform: translateY(4px);
+      opacity: 1;
     }
 
     .done {
@@ -523,10 +526,10 @@ const GAME_HTML = `<!DOCTYPE html>
       osc.start(now); osc.stop(now + 0.15);
     }
 
-    function sfxPour(durationSec = 0.8, waterLevel = 1) {
-      const ctx = getAudioCtx(); if (!ctx) return;
-      const now = ctx.currentTime;
-      const dur = Math.max(0.3, durationSec);
+    let cachedNoiseBuf = null;
+    function getNoiseBuf(ctx) {
+      if (cachedNoiseBuf && cachedNoiseBuf.sampleRate === ctx.sampleRate) return cachedNoiseBuf;
+      const dur = 2.0;
       const bufSize = Math.floor(ctx.sampleRate * dur);
       const buf = ctx.createBuffer(1, bufSize, ctx.sampleRate);
       const data = buf.getChannelData(0);
@@ -538,7 +541,17 @@ const GAME_HTML = `<!DOCTYPE html>
         b2 = 0.96900 * b2 + white * 0.1538520;
         data[i] = (b0 + b1 + b2) * 0.18;
       }
-      const noise = ctx.createBufferSource(); noise.buffer = buf;
+      cachedNoiseBuf = buf;
+      return buf;
+    }
+
+    function sfxPour(durationSec = 0.8, waterLevel = 1) {
+      const ctx = getAudioCtx(); if (!ctx) return;
+      const now = ctx.currentTime;
+      const dur = Math.max(0.3, durationSec);
+      const noise = ctx.createBufferSource();
+      noise.buffer = getNoiseBuf(ctx);
+      noise.loop = true;
       const filter = ctx.createBiquadFilter();
       filter.type = 'bandpass';
       const startF = 500 + waterLevel * 160, endF = startF + 320;
@@ -688,13 +701,16 @@ const GAME_HTML = `<!DOCTYPE html>
       const bd = $('board');
       bd.innerHTML = ''; els = [];
       { const s = $('stream'); s.getAnimations().forEach(x => x.cancel()); s.style.display = 'none'; }
-      const aw = Math.max(280, bd.clientWidth - 20), ah = bd.clientHeight - 120;
-      const bwMax = Math.min(42, aw / (perRow + .4 * (perRow - 1))), bhMax = ah / (rows + .28 * (rows - 1));
-      let bw = Math.min(bwMax, bhMax / 2.7);
-      let bh = Math.min(bhMax, bw * 2.7);
-      if (bh < 44) {
-        bh = Math.max(38, bhMax);
-        bw = Math.min(bwMax, bh / 2.6);
+      const aw = Math.max(300, bd.clientWidth - 16);
+      const ah = Math.max(300, bd.clientHeight - 90);
+      const gapRatio = 0.46;
+      const bwMax = Math.min(52, aw / (perRow + gapRatio * (perRow - 1)));
+      const bhMax = ah / (rows + .32 * (rows - 1));
+      let bw = Math.min(bwMax, bhMax / 2.65);
+      let bh = Math.min(bhMax, bw * 2.65);
+      if (bh < 48) {
+        bh = Math.max(44, bhMax);
+        bw = Math.min(bwMax, bh / 2.5);
       }
       const root = document.documentElement.style; root.setProperty('--bw', bw + 'px'); root.setProperty('--bh', bh + 'px');
       let row;
@@ -856,7 +872,7 @@ const GAME_HTML = `<!DOCTYPE html>
     $('un').onclick = undo; $('ab').onclick = addBottle;
     $('snd').onclick = function () { sound = !sound; this.style.opacity = sound ? 1 : .45; toast(sound ? 'Sound on' : 'Sound off') };
     window.addEventListener('resize', () => { if (!busy) render() });
-    let SP = 1.15, auto = false, running = false;
+    let SP = 1.42, auto = false, running = false;
     function solve(b0, cv0) {
       const st0 = b0.map(x => x.map(u => u.c + (u.h ? 64 : 0))), anyC = cv0.some(Boolean), cs = v => v.map(q => q ? 1 : 0).join('');
       const k = (s, v) => (anyC ? s.map(x => x.join(',')) : s.map(x => x.join(',')).sort()).join('|') + '#' + cs(v);
@@ -917,12 +933,12 @@ const GAME_HTML = `<!DOCTYPE html>
       } finally { running = false }
     }
     $('au').onclick = function () {
-      auto = !auto; this.classList.toggle('on', auto); SP = auto ? .95 : 1.15;
+      auto = !auto; this.classList.toggle('on', auto); SP = auto ? 1.15 : 1.42;
       toast(auto ? 'Auto play on' : 'Auto play off');
       if (auto) { sel = null; busy = false; sync(); run() }
     };
     function openStart() {
-      auto = false; $('au').classList.remove('on'); SP = 1.15;
+      auto = false; $('au').classList.remove('on'); SP = 1.42;
       $('lvin').value = L; $('st').classList.remove('off');
       setTimeout(() => { $('lvin').focus(); $('lvin').select() }, 50);
     }
@@ -936,25 +952,60 @@ const GAME_HTML = `<!DOCTYPE html>
     $('play').onclick = startGame;
     $('lvin').onkeydown = e => { if (e.key === 'Enter') startGame() };
     $('lv').parentNode.onclick = openStart;
-    // Animated Background: Rising 3D Liquid Bubbles & Ambient Sparkles
+    // Animated Background: Rising 3D Liquid Bubbles (Optimized Sprite Blitting for Mobile 60 FPS)
     (function initBgAnimation() {
       const cv = document.getElementById('bg-canvas');
       if (!cv) return;
-      const ctx = cv.getContext('2d');
+      const ctx = cv.getContext('2d', { alpha: true });
       let W = 0, H = 0, dpr = 1;
 
+      // Pre-render bubble sprite textures once to avoid per-frame dynamic gradient allocation
+      const spriteSize = 64;
+      function createBubbleSprite(hue) {
+        const sc = document.createElement('canvas');
+        sc.width = spriteSize;
+        sc.height = spriteSize;
+        const sctx = sc.getContext('2d');
+        const c = spriteSize / 2;
+        const r = spriteSize * 0.44;
+
+        const grad = sctx.createRadialGradient(c - r * 0.3, c - r * 0.3, r * 0.08, c, c, r);
+        grad.addColorStop(0, 'hsla(' + hue + ', 90%, 95%, 0.85)');
+        grad.addColorStop(0.5, 'hsla(' + hue + ', 80%, 65%, 0.35)');
+        grad.addColorStop(1, 'hsla(' + hue + ', 90%, 50%, 0.05)');
+        sctx.fillStyle = grad;
+        sctx.beginPath();
+        sctx.arc(c, c, r, 0, Math.PI * 2);
+        sctx.fill();
+
+        sctx.strokeStyle = 'hsla(' + hue + ', 85%, 75%, 0.7)';
+        sctx.lineWidth = 1.8;
+        sctx.stroke();
+
+        sctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+        sctx.beginPath();
+        sctx.arc(c - r * 0.38, c - r * 0.38, Math.max(1.5, r * 0.22), 0, Math.PI * 2);
+        sctx.fill();
+
+        return sc;
+      }
+
+      const spriteCyan = createBubbleSprite(190);
+      const spriteViolet = createBubbleSprite(275);
+
       function resize() {
-        dpr = Math.min(window.devicePixelRatio || 1, 2);
+        dpr = Math.min(window.devicePixelRatio || 1, 1.25);
         W = window.innerWidth;
         H = window.innerHeight;
-        cv.width = W * dpr;
-        cv.height = H * dpr;
+        cv.width = Math.round(W * dpr);
+        cv.height = Math.round(H * dpr);
         ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
       }
       resize();
       window.addEventListener('resize', resize);
 
-      const BUBBLE_COUNT = Math.min(40, Math.max(22, Math.floor(window.innerWidth / 24)));
+      const isMobile = ('ontouchstart' in window) || (window.innerWidth < 600);
+      const BUBBLE_COUNT = isMobile ? 18 : 28;
       const bubbles = [];
       const ripples = [];
 
@@ -962,40 +1013,39 @@ const GAME_HTML = `<!DOCTYPE html>
         bubbles.push({
           x: Math.random() * W,
           y: Math.random() * H,
-          r: 3 + Math.random() * 13,
-          speed: 0.35 + Math.random() * 0.85,
+          r: 4 + Math.random() * 12,
+          speed: 0.35 + Math.random() * 0.75,
           wobble: Math.random() * Math.PI * 2,
-          wobbleSpeed: 0.02 + Math.random() * 0.03,
-          wobbleAmp: 0.4 + Math.random() * 0.7,
-          alpha: 0.22 + Math.random() * 0.38,
-          hue: Math.random() < 0.6 ? 190 : 275
+          wobbleSpeed: 0.02 + Math.random() * 0.025,
+          wobbleAmp: 0.35 + Math.random() * 0.55,
+          alpha: 0.25 + Math.random() * 0.45,
+          sprite: Math.random() < 0.65 ? spriteCyan : spriteViolet
         });
       }
 
       window.addEventListener('pointerdown', (e) => {
-        for (let i = 0; i < 5; i++) {
+        if (bubbles.length < BUBBLE_COUNT + 5) {
           bubbles.push({
-            x: e.clientX + (Math.random() - 0.5) * 22,
-            y: e.clientY + (Math.random() - 0.5) * 22,
-            r: 2.5 + Math.random() * 5,
-            speed: 1.1 + Math.random() * 1.5,
+            x: e.clientX,
+            y: e.clientY,
+            r: 3 + Math.random() * 4,
+            speed: 1.0 + Math.random() * 1.2,
             wobble: Math.random() * Math.PI * 2,
             wobbleSpeed: 0.05,
-            wobbleAmp: 1.1,
-            alpha: 0.6 + Math.random() * 0.3,
-            hue: 180 + Math.random() * 110,
+            wobbleAmp: 0.8,
+            alpha: 0.6,
+            sprite: Math.random() < 0.5 ? spriteCyan : spriteViolet,
             burst: true
           });
         }
-        ripples.push({
-          x: e.clientX,
-          y: e.clientY,
-          r: 6,
-          maxR: 45 + Math.random() * 20,
-          alpha: 0.35
-        });
-        if (bubbles.length > BUBBLE_COUNT + 15) {
-          bubbles.splice(0, bubbles.length - (BUBBLE_COUNT + 15));
+        if (ripples.length < 3) {
+          ripples.push({
+            x: e.clientX,
+            y: e.clientY,
+            r: 6,
+            maxR: 42,
+            alpha: 0.32
+          });
         }
       }, { passive: true });
 
@@ -1005,14 +1055,14 @@ const GAME_HTML = `<!DOCTYPE html>
         for (let i = ripples.length - 1; i >= 0; i--) {
           const rp = ripples[i];
           rp.r += 1.8;
-          rp.alpha *= 0.94;
+          rp.alpha *= 0.93;
           if (rp.alpha < 0.02 || rp.r > rp.maxR) {
             ripples.splice(i, 1);
             continue;
           }
           ctx.beginPath();
           ctx.arc(rp.x, rp.y, rp.r, 0, Math.PI * 2);
-          ctx.strokeStyle = `rgba(180, 230, 255, ${rp.alpha.toFixed(3)})`;
+          ctx.strokeStyle = 'rgba(180, 230, 255, ' + rp.alpha.toFixed(3) + ')';
           ctx.lineWidth = 1.5;
           ctx.stroke();
         }
@@ -1033,24 +1083,11 @@ const GAME_HTML = `<!DOCTYPE html>
             b.x = Math.random() * W;
           }
 
-          ctx.beginPath();
-          ctx.arc(b.x, b.y, b.r, 0, Math.PI * 2);
-          ctx.strokeStyle = `hsla(${b.hue}, 85%, 75%, ${(b.alpha * 0.65).toFixed(3)})`;
-          ctx.lineWidth = Math.max(1, b.r * 0.1);
-          ctx.stroke();
-
-          const grad = ctx.createRadialGradient(b.x - b.r * 0.3, b.y - b.r * 0.3, b.r * 0.08, b.x, b.y, b.r);
-          grad.addColorStop(0, `hsla(${b.hue}, 90%, 95%, ${(b.alpha * 0.55).toFixed(3)})`);
-          grad.addColorStop(0.5, `hsla(${b.hue}, 80%, 65%, ${(b.alpha * 0.2).toFixed(3)})`);
-          grad.addColorStop(1, `hsla(${b.hue}, 90%, 50%, ${(b.alpha * 0.04).toFixed(3)})`);
-          ctx.fillStyle = grad;
-          ctx.fill();
-
-          ctx.beginPath();
-          ctx.arc(b.x - b.r * 0.38, b.y - b.r * 0.38, Math.max(1, b.r * 0.24), 0, Math.PI * 2);
-          ctx.fillStyle = `rgba(255, 255, 255, ${(b.alpha * 0.85).toFixed(3)})`;
-          ctx.fill();
+          ctx.globalAlpha = b.alpha;
+          const diam = b.r * 2.2;
+          ctx.drawImage(b.sprite, b.x - b.r * 1.1, b.y - b.r * 1.1, diam, diam);
         }
+        ctx.globalAlpha = 1.0;
 
         requestAnimationFrame(loop);
       }

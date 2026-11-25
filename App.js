@@ -1,8 +1,10 @@
 import React from 'react';
-import { StyleSheet, View, Platform } from 'react-native';
+import { StyleSheet, View, Platform, StatusBar as RNStatusBar } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { WebView } from 'react-native-webview';
 import { GAME_HTML } from './gameHtml';
+
+const statusBarHeight = Platform.OS === 'android' ? (RNStatusBar.currentHeight || 36) : 0;
 
 export default function App() {
   if (Platform.OS === 'web') {
@@ -18,8 +20,8 @@ export default function App() {
   }
 
   return (
-    <View style={styles.container}>
-      <StatusBar style="light" hidden={false} translucent backgroundColor="transparent" />
+    <View style={[styles.container, { paddingTop: statusBarHeight }]}>
+      <StatusBar style="light" translucent backgroundColor="transparent" />
       <WebView
         originWhitelist={['*']}
         source={{ html: GAME_HTML }}
@@ -31,6 +33,9 @@ export default function App() {
         bounces={false}
         scrollEnabled={false}
         overScrollMode="never"
+        androidHardwareAccelerationDisabled={false}
+        androidLayerType="hardware"
+        renderToHardwareTextureAndroid={true}
       />
     </View>
   );

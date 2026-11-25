@@ -13,13 +13,19 @@
       "supportsTablet": true
     },
     "android": {
+      "package": "com.watersort.game",
       "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#08051a"
       }
     },
     "web": {
       "favicon": "./assets/favicon.png"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "e4cb4280-fae8-4cae-b9e9-5d27af9b5288"
+      }
     }
   }
 }
-
