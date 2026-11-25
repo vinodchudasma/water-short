@@ -1136,15 +1136,18 @@ const GAME_HTML = `<!DOCTYPE html>
       st.getAnimations().forEach(x => x.cancel()); st.style.display = 'none';
 
       if (full(B[b])) sfxCork();
-      busy = false;
       const opened = unlockCheck();
+      if (solved(B)) {
+        sync();
+        return win();
+      }
+      busy = false;
       let added = false;
       if (!hasMove() && adds > 0) {
         addBottle();
         added = true;
       }
       sync();
-      if (solved(B)) return win();
       if (added) { toast('No moves left, added an extra bottle!'); sfxDrop(420, 0.06) }
       else if (opened) { toast('Bottle unlocked'); sfxDrop(680, 0.06) }
       if (!hasMove()) toast('No moves left. Undo or restart level.');
@@ -1166,21 +1169,22 @@ const GAME_HTML = `<!DOCTYPE html>
       cv.width = W * dpr; cv.height = H * dpr; document.body.appendChild(cv);
       const c = cv.getContext('2d'); c.scale(dpr, dpr);
       const P = [];
-      const burst = (x, y, n) => { for (let i = 0; i < n; i++) { const a = -Math.PI / 2 + (Math.random() - .5) * 1.7, v = 7 + Math.random() * 9; P.push({ x, y, vx: Math.cos(a) * v, vy: Math.sin(a) * v, w: 5 + Math.random() * 6, h: 3 + Math.random() * 5, r: Math.random() * 6, vr: (Math.random() - .5) * .4, c: COL[Math.floor(Math.random() * COL.length)], life: 0 }) } };
-      burst(W * .15, H * .85, 60); burst(W * .85, H * .85, 60);
-      setTimeout(() => burst(W * .5, H * .62, 70), 380);
+      const burst = (x, y, n) => { for (let i = 0; i < n; i++) { const a = -Math.PI / 2 + (Math.random() - .5) * 1.6, v = 6.5 + Math.random() * 8.5; P.push({ x, y, vx: Math.cos(a) * v, vy: Math.sin(a) * v, w: 5 + Math.random() * 5, h: 3 + Math.random() * 4, r: Math.random() * 6, vr: (Math.random() - .5) * .38, c: COL[Math.floor(Math.random() * COL.length)], life: 0 }) } };
+      burst(W * .16, H * .84, 40); burst(W * .84, H * .84, 40);
+      setTimeout(() => burst(W * .5, H * .64, 25), 300);
       let last = performance.now();
       (function f(t) {
         const dt = Math.min(2, (t - last) / 16.7); last = t; c.clearRect(0, 0, W, H);
         for (const p of P) {
-          p.vy += .28 * dt; p.vx *= .992; p.x += p.vx * dt; p.y += p.vy * dt; p.r += p.vr * dt; p.life += dt;
-          c.save(); c.translate(p.x, p.y); c.rotate(p.r); c.globalAlpha = Math.max(0, 1 - p.life / 150); c.fillStyle = p.c; c.fillRect(-p.w / 2, -p.h / 2, p.w, p.h); c.restore()
+          p.vy += .27 * dt; p.vx *= .992; p.x += p.vx * dt; p.y += p.vy * dt; p.r += p.vr * dt; p.life += dt;
+          c.save(); c.translate(p.x, p.y); c.rotate(p.r); c.globalAlpha = Math.max(0, 1 - p.life / 125); c.fillStyle = p.c; c.fillRect(-p.w / 2, -p.h / 2, p.w, p.h); c.restore()
         }
-        if (performance.now() - t0 < 450 || P.some(p => p.life < 150 && p.y < H + 40)) requestAnimationFrame(f); else cv.remove();
+        if (performance.now() - t0 < 360 || P.some(p => p.life < 125 && p.y < H + 40)) requestAnimationFrame(f); else cv.remove();
       })(last);
       var t0 = performance.now();
     }
     async function win() {
+      const winLevel = L;
       confetti();
       busy = true; sfxWin();
       try { localStorage.setItem('ws_level', L + 1) } catch (e) { }
@@ -1192,7 +1196,7 @@ const GAME_HTML = `<!DOCTYPE html>
       $('win').classList.add('on');
       if (auto) {
         await sleep(2200);
-        if (auto && $('win').classList.contains('on')) {
+        if (auto && L === winLevel && $('win').classList.contains('on')) {
           $('win').classList.remove('on');
           L++; build();
         }
@@ -1250,10 +1254,11 @@ const GAME_HTML = `<!DOCTYPE html>
             if (adds) { addBottle(); await sleep(500); continue }
             toast('Auto could not solve this one, skipping'); L++; build(); await sleep(700); continue;
           }
+          const curL = L;
           for (const [a, b] of path) {
-            if (!auto) break;
+            if (!auto || L !== curL) break;
             while (busy && !solved(B)) await sleep(40);
-            if (solved(B)) break;
+            if (!auto || L !== curL || solved(B)) break;
             sel = null;
             pour(a, b);
             while (busy) await sleep(40);
@@ -1264,7 +1269,7 @@ const GAME_HTML = `<!DOCTYPE html>
     }
     $('au').onclick = function () {
       auto = !auto; this.classList.toggle('on', auto); SP = auto ? 1.15 : 1.42;
-      if (auto) { sel = null; busy = false; sync(); run() }
+      if (auto) { sel = null; sync(); run() }
     };
     function openStart() {
       auto = false; $('au').classList.remove('on'); SP = 1.42;
