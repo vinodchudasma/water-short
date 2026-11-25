@@ -889,14 +889,13 @@ const GAME_HTML = `<!DOCTYPE html>
 
     .shape-cork {
       position: absolute;
-      left: 50%;
+      left: var(--smx, 50%);
       top: 1px;
-      width: 24%;
-      height: 14%;
-      margin-left: -12%;
+      width: 21%;
+      height: 13%;
       z-index: 4;
       opacity: 0;
-      transform: translateY(-20px);
+      transform: translate(-50%, -20px);
       transition: transform .42s cubic-bezier(.34, 1.35, .64, 1), opacity .2s ease-out;
       filter: drop-shadow(0 3px 5px rgba(0, 0, 0, .45));
       pointer-events: none;
@@ -927,7 +926,21 @@ const GAME_HTML = `<!DOCTYPE html>
 
     .shape-wrap.done .shape-cork {
       opacity: 1;
-      transform: translateY(2px);
+      transform: translate(-50%, 2px);
+    }
+
+    #shape-fish {
+      transition: transform var(--d, .45s) cubic-bezier(.45, 0, .3, 1);
+    }
+
+    .fish-bob {
+      animation: fishSwim 2.6s ease-in-out infinite;
+      transform-origin: center;
+    }
+
+    @keyframes fishSwim {
+      0%, 100% { transform: translate(-2px, 0px) rotate(-3deg); }
+      50% { transform: translate(3px, -2.5px) rotate(3deg); }
     }
 
     #lvin {
@@ -1035,11 +1048,21 @@ const GAME_HTML = `<!DOCTYPE html>
 
     const SHAPES = [
       {
+        id: 'pipe', name: 'Pipe Lab', yMin: 29, yMax: 190.5, mouthX: 0.22, mouthY: 0.08,
+        d: 'M27,15 H61 Q66,15 66,20 Q66,25 60,26 L60,45 L90,45 Q108,45 108,63 L108,86 L138,86 Q156,86 156,104 L156,126 A35,35 0 1,1 132,126 L132,112 Q132,108 128,108 L108,108 L108,132 Q108,142 90,142 Q72,142 72,132 L72,71 Q72,67 68,67 L60,67 L60,80 Q60,89 44,89 Q28,89 28,80 L28,26 Q22,25 22,20 Q22,15 27,15 Z',
+        clipD: 'M31.5,27 H56.5 V48.5 H90 Q104.5,48.5 104.5,63 V89.5 H138 Q152.5,89.5 152.5,104 V128.7 A31.5,31.5 0 1,1 135.5,128.7 V112 Q135.5,104.5 128,104.5 H104.5 V132 Q104.5,138.5 90,138.5 Q75.5,138.5 75.5,132 V71 Q75.5,63.5 68,63.5 H56.5 V80 Q56.5,85.5 44,85.5 Q31.5,85.5 31.5,80 Z',
+        specD: 'M34,32 H40 V78 Q36,80 34,74 Z M78,68 H83 V130 Q79,132 78,125 Z M116,158 C116,142 125,131 136,128 C128,136 123,147 123,160 C123,170 127,179 133,184 C121,180 116,170 116,158 Z',
+        specR: 'M160,134 C169,140 174,151 172,165 C170,175 163,182 154,186 C162,179 166,171 167,160 C168,149 165,140 160,134 Z M68,48 H91 Q101,48 103,56 Q98,52 90,52 H68 Z M114,89 H139 Q149,89 151,97 Q146,93 138,93 H114 Z',
+        flowD: 'M44,22 V48 Q44,56 52,56 H82 Q90,56 90,64 V89 Q90,97 98,97 H136 Q144,97 144,105 V188',
+        facetD: ''
+      },
+      {
         id: 'flask', name: 'Potion Flask', yMin: 36, yMax: 191,
         d: 'M76,16 H124 Q129,16 129,23 Q129,30 121,31 L117,33 L117,64 C149,78 168,107 168,140 C168,176 138,196 100,196 C62,196 32,176 32,140 C32,107 51,78 83,64 L83,33 L79,31 Q71,30 71,23 Q71,16 76,16 Z',
         clipD: 'M86,34 L114,34 L114,66 C145,80 163,108 163,140 C163,172 135,191 100,191 C65,191 37,172 37,140 C37,108 55,80 86,66 Z',
         specD: 'M48,136 C48,108 64,86 86,74 C72,94 60,114 60,140 C60,156 66,168 74,176 C57,168 48,153 48,136 Z',
         specR: 'M152,138 C152,158 140,174 124,182 C136,171 144,157 144,138 C144,116 132,96 119,82 C139,96 152,116 152,138 Z',
+        flowD: 'M100,24 V188',
         facetD: ''
       },
       {
@@ -1489,6 +1512,19 @@ const GAME_HTML = `<!DOCTYPE html>
       const waveLine = 'M0,' + wY + ' Q25,' + (wY - 5) + ' 50,' + wY + ' T100,' + wY + ' T150,' + wY + ' T200,' + wY + ' T250,' + wY + ' T300,' + wY + ' T350,' + wY + ' T400,' + wY;
       const waveB = 'M0,' + (wY - 1) + ' Q50,' + (wY + 5) + ' 100,' + (wY - 1) + ' T200,' + (wY - 1) + ' T300,' + (wY - 1) + ' T400,' + (wY - 1) + ' V' + (wY + 24) + ' H0 Z';
       const facets = sh.facetD ? '<path d="' + sh.facetD + '" fill="none" stroke="rgba(255,255,255,0.16)" stroke-width="1.3" stroke-linecap="round"/>' : '';
+      const flowPath = sh.flowD || 'M100,24 V188';
+      const flowWidth = sh.id === 'pipe' ? 9 : 7;
+      const mouthCx = (sh.mouthX || 0.5) * 200;
+      const fishMarkup = sh.id === 'pipe'
+        ? '<g id="shape-fish" style="transform:translate(144px,172px)"><g class="fish-bob">'
+          + '<path d="M-8,0 L-13,-4.5 L-11.5,0 L-13,4.5 Z" fill="#ff6b00"/>'
+          + '<ellipse cx="0" cy="0" rx="8.5" ry="5.5" fill="#ff851b" stroke="#fff4e0" stroke-width="0.9"/>'
+          + '<path d="M-2.5,-5.2 Q-0.5,0 -2.5,5.2" fill="none" stroke="#ffffff" stroke-width="2.1"/>'
+          + '<path d="M3,-4.5 Q4.5,0 3,4.5" fill="none" stroke="#ffffff" stroke-width="1.6"/>'
+          + '<circle cx="5.2" cy="-1.2" r="1.3" fill="#1a0f2e"/>'
+          + '<circle cx="5.6" cy="-1.5" r="0.45" fill="#ffffff"/>'
+          + '</g></g>'
+        : '';
       return ''
         + '<div class="shape-cork"></div>'
         + '<svg id="shape-svg" viewBox="0 0 200 210" aria-hidden="true">'
@@ -1519,6 +1555,8 @@ const GAME_HTML = `<!DOCTYPE html>
         + '  </defs>'
         + '  <path d="' + sh.d + '" fill="url(#shape-glass-bg)"/>'
         + '  <g clip-path="url(#shape-clip)">'
+        + '    <path id="shape-pipe-flow" d="' + flowPath + '" fill="none" stroke="' + colorHex + '" stroke-width="' + flowWidth + '" stroke-linecap="round" stroke-linejoin="round" style="opacity:0"/>'
+        + '    <path id="shape-pipe-flow-core" d="' + flowPath + '" fill="none" stroke="rgba(255,255,255,0.48)" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" style="opacity:0"/>'
         + '    <g id="shape-liq-wrap">'
         + '      <path class="shape-wave-b" d="' + waveB + '" fill="' + colorHex + '" opacity="0.55"/>'
         + '      <path class="shape-wave-b" d="' + waveB + '" fill="rgba(255,255,255,0.22)"/>'
@@ -1528,8 +1566,9 @@ const GAME_HTML = `<!DOCTYPE html>
         + '      <circle class="shape-bub" cx="76" cy="' + (wY + 95) + '" r="3.2" fill="rgba(255,255,255,0.45)" style="animation-delay:0s"/>'
         + '      <circle class="shape-bub" cx="118" cy="' + (wY + 115) + '" r="2.4" fill="rgba(255,255,255,0.4)" style="animation-delay:1.1s"/>'
         + '      <circle class="shape-bub" cx="95" cy="' + (wY + 130) + '" r="3.8" fill="rgba(255,255,255,0.35)" style="animation-delay:2.1s"/>'
-        + '      <circle class="shape-bub" cx="132" cy="' + (wY + 98) + '" r="2" fill="rgba(255,255,255,0.45)" style="animation-delay:0.6s"/>'
+        + '      <circle class="shape-bub" cx="144" cy="' + (wY + 150) + '" r="2.6" fill="rgba(255,255,255,0.48)" style="animation-delay:0.6s"/>'
         + '    </g>'
+        + fishMarkup
         + '    <rect x="0" y="0" width="200" height="210" fill="url(#shape-liq-3d)" pointer-events="none"/>'
         + '  </g>'
         + facets
@@ -1537,7 +1576,7 @@ const GAME_HTML = `<!DOCTYPE html>
         + '  <path d="' + sh.d + '" fill="url(#shape-glass-sheen)" stroke="rgba(225,220,255,0.84)" stroke-width="3.2" stroke-linejoin="round" pointer-events="none"/>'
         + '  <path d="' + sh.specD + '" fill="url(#shape-spec-grad)" pointer-events="none"/>'
         + '  <path d="' + sh.specR + '" fill="rgba(255,255,255,0.18)" pointer-events="none"/>'
-        + '  <ellipse cx="100" cy="18" rx="18" ry="3.6" fill="rgba(255,255,255,0.20)" stroke="rgba(240,235,255,0.82)" stroke-width="1.6" pointer-events="none"/>'
+        + '  <ellipse cx="' + mouthCx + '" cy="18" rx="18" ry="3.6" fill="rgba(255,255,255,0.20)" stroke="rgba(240,235,255,0.82)" stroke-width="1.6" pointer-events="none"/>'
         + '</svg>';
     }
 
@@ -1614,6 +1653,7 @@ const GAME_HTML = `<!DOCTYPE html>
           const leftEl = makeBottleEl(topN); midRow.appendChild(leftEl); els[topN] = leftEl;
         }
         const shDef = SHAPES.find(s => s.id === shapeState.id) || SHAPES[0];
+        root.setProperty('--smx', ((shDef.mouthX || 0.5) * 100) + '%');
         const shWrap = document.createElement('div');
         shWrap.id = 'shape-wrap';
         shWrap.className = 'shape-wrap';
@@ -1683,9 +1723,21 @@ const GAME_HTML = `<!DOCTYPE html>
         const offsetY = (1 - frac) * (shDef.yMax - shDef.yMin);
         const liqEl = $('shape-liq-wrap');
         if (liqEl) liqEl.style.transform = 'translateY(' + offsetY.toFixed(2) + 'px)';
+        const fishEl = $('shape-fish');
+        if (fishEl) {
+          const liqTopY = shDef.yMin + offsetY;
+          let fx = 144, fy = Math.min(176, liqTopY + 11);
+          if (liqTopY <= 128) {
+            fx = 90;
+            fy = Math.max(76, Math.min(126, liqTopY + 12));
+          }
+          fishEl.style.transform = 'translate(' + fx + 'px,' + fy.toFixed(1) + 'px)';
+        }
         const shWrap = $('shape-wrap');
         if (shWrap) {
-          shWrap.classList.toggle('done', shapeState.units >= shapeState.cap);
+          if (skipBottleIdx !== -2) {
+            shWrap.classList.toggle('done', shapeState.units >= shapeState.cap);
+          }
           shWrap.classList.toggle('ready', skipBottleIdx !== -2 && sel !== null && canPourToShape(sel));
         }
         const shapeDone = Math.max(0, shapeState.units - shapeState.initUnits);
@@ -1757,21 +1809,30 @@ const GAME_HTML = `<!DOCTYPE html>
     async function pourToShape(a) {
       busy = true;
       hist.push({ B: JSON.parse(JSON.stringify(B)), cov: cov.slice(), shapeUnits: shapeState.units });
+      const shDef = SHAPES.find(s => s.id === shapeState.id) || SHAPES[0];
       const ea = els[a], shEl = $('shape-wrap'), ra = ea.getBoundingClientRect(), rb = shEl.getBoundingClientRect();
-      const ah = ra.height, aw = ra.width, bcx = rb.left + rb.width / 2, side = bcx - .5 * ah > 8 ? -1 : 1;
+      const ah = ra.height, aw = ra.width;
+      const bcx = rb.left + rb.width * (shDef.mouthX || 0.5);
+      const side = bcx - .5 * ah > 8 ? -1 : 1;
       const c = shapeState.color, color = COL[c];
       let n = 0; while (n < B[a].length && B[a][B[a].length - 1 - n].c === c && !B[a][B[a].length - 1 - n].h && shapeState.units + n < shapeState.cap) n++;
       const acx = ra.left + ra.width / 2, acy = ra.top + ra.height / 2 + 16, R = t => t * Math.PI / 180;
-      const mouthY = rb.top + rb.height * 0.085;
+      const mouthY = rb.top + rb.height * (shDef.mouthY || 0.085);
       const myf = t => mouthY - 12 - ah * Math.cos(R(t)) - (aw / 2) * Math.sin(R(t)), py = t => myf(t) + .5 * ah * Math.cos(R(t)) - acy;
       const pose = t => 'translate(' + (bcx + side * .5 * ah * Math.sin(R(t)) - acx) + 'px,' + py(t) + 'px) rotate(' + (-side * t) + 'deg)';
       const mv = 750 * SP, pd = (950 + n * 300) * SP, rt = 650 * SP, T = mv + pd + rt, E = 'cubic-bezier(.45,0,.2,1)';
       sel = null; ea.classList.remove('sel'); ea.style.transition = 'none'; ea.style.zIndex = 20;
       shEl.classList.remove('ready');
       const st = $('stream'); st.getAnimations().forEach(x => x.cancel());
-      const surf = rb.top + rb.height * (0.89 - ((shapeState.units + n / 2) / shapeState.cap) * 0.70);
+      const surf = shDef.id === 'pipe'
+        ? (mouthY + Math.max(16, rb.height * 0.14))
+        : (rb.top + rb.height * (0.89 - ((shapeState.units + n / 2) / shapeState.cap) * 0.70));
       const m0 = myf(52), m1 = myf(88);
       st.style.cssText = 'background:' + color + ';left:' + (bcx - 3.5) + 'px;top:' + m0 + 'px;height:' + Math.max(8, surf - m0) + 'px';
+      const flowEl = $('shape-pipe-flow'), coreEl = $('shape-pipe-flow-core');
+      const flowLen = (flowEl && flowEl.getTotalLength) ? flowEl.getTotalLength() : 240;
+      if (flowEl) { flowEl.getAnimations().forEach(x => x.cancel()); flowEl.style.strokeDasharray = flowLen; flowEl.style.strokeDashoffset = flowLen; flowEl.style.opacity = '0'; }
+      if (coreEl) { coreEl.getAnimations().forEach(x => x.cancel()); coreEl.style.strokeDasharray = flowLen; coreEl.style.strokeDashoffset = flowLen; coreEl.style.opacity = '0'; }
       document.documentElement.style.setProperty('--d', (pd * .8) + 'ms');
       const wy = Math.min(py(52), -28);
       ea.animate([{ transform: 'translateY(-16px)', easing: E }, { transform: 'translate(0px,' + wy + 'px)', offset: .45 * mv / T, easing: E }, { transform: pose(52), offset: mv / T, easing: 'linear' }, { transform: pose(70), offset: (mv + pd * .45) / T, easing: 'linear' }, { transform: pose(88), offset: (mv + pd) / T, easing: E }, { transform: 'translate(0px,' + wy + 'px)', offset: (mv + pd + rt * .5) / T, easing: E }, { transform: 'none' }], { duration: T });
@@ -1779,6 +1840,9 @@ const GAME_HTML = `<!DOCTYPE html>
       st.style.display = 'block';
       st.animate([{ clipPath: 'inset(0 0 100% 0)' }, { clipPath: 'inset(0)' }], { duration: 180, easing: 'ease-in', fill: 'forwards' });
       st.animate([{ top: m0 + 'px', height: Math.max(8, surf - m0) + 'px' }, { top: m1 + 'px', height: Math.max(8, surf - m1) + 'px' }], { duration: pd * .8, delay: 60, easing: 'linear', fill: 'both' });
+      const flowInDur = Math.min(280, Math.max(160, pd * 0.42));
+      if (flowEl) { flowEl.style.opacity = '0.96'; flowEl.animate([{ strokeDashoffset: flowLen }, { strokeDashoffset: 0 }], { duration: flowInDur, easing: 'ease-in', fill: 'forwards' }); }
+      if (coreEl) { coreEl.style.opacity = '0.55'; coreEl.animate([{ strokeDashoffset: flowLen }, { strokeDashoffset: 0 }], { duration: flowInDur, easing: 'ease-in', fill: 'forwards' }); }
 
       sfxPour((pd * .8) / 1000, Math.min(4, shapeState.units));
       await sleep(120);
@@ -1787,9 +1851,13 @@ const GAME_HTML = `<!DOCTYPE html>
       sync(-2);
       await sleep(pd * .8 - 100);
       st.animate([{ clipPath: 'inset(0)' }, { clipPath: 'inset(100% 0 0 0)' }], { duration: 200, easing: 'ease-out', fill: 'forwards' });
+      if (flowEl) flowEl.animate([{ strokeDashoffset: 0 }, { strokeDashoffset: -flowLen }], { duration: 240, easing: 'ease-out', fill: 'forwards' });
+      if (coreEl) coreEl.animate([{ strokeDashoffset: 0 }, { strokeDashoffset: -flowLen }], { duration: 240, easing: 'ease-out', fill: 'forwards' });
       await sleep(T - (mv + 60 + pd * .8 - 100) + 30);
       ea.style.transition = ''; ea.style.zIndex = '';
       st.getAnimations().forEach(x => x.cancel()); st.style.display = 'none';
+      if (flowEl) { flowEl.getAnimations().forEach(x => x.cancel()); flowEl.style.opacity = '0'; }
+      if (coreEl) { coreEl.getAnimations().forEach(x => x.cancel()); coreEl.style.opacity = '0'; }
 
       const shapeJustFilled = shapeState.units >= shapeState.cap;
       if (shapeJustFilled) sfxCork();
