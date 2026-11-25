@@ -111,7 +111,8 @@ const GAME_HTML = `<!DOCTYPE html>
     }
 
     body.theme-wood #app {
-      padding: calc(34px + var(--sat)) 16px calc(38px + var(--sab));
+      z-index: 3;
+      padding: calc(52px + var(--sat)) 16px calc(48px + var(--sab));
     }
 
     body.theme-wood .title b {
@@ -157,11 +158,10 @@ const GAME_HTML = `<!DOCTYPE html>
     .garden-edge {
       display: none;
       position: fixed;
-      left: -10px;
-      right: -10px;
+      left: -12px;
+      right: -12px;
       pointer-events: none;
       z-index: 2;
-      filter: drop-shadow(0 4px 8px rgba(15, 35, 10, 0.45));
     }
 
     body.theme-wood .garden-edge {
@@ -169,14 +169,16 @@ const GAME_HTML = `<!DOCTYPE html>
     }
 
     #garden-top {
-      top: -2px;
-      height: calc(46px + var(--sat));
+      top: -4px;
+      height: calc(64px + var(--sat));
+      filter: drop-shadow(0 5px 10px rgba(20, 8, 2, 0.58));
       animation: leafSwayTop 5s ease-in-out infinite;
     }
 
     #garden-bot {
-      bottom: -2px;
-      height: calc(46px + var(--sab));
+      bottom: -4px;
+      height: calc(54px + var(--sab));
+      filter: drop-shadow(0 -5px 10px rgba(20, 8, 2, 0.55));
       animation: leafSwayBot 5.5s ease-in-out infinite;
     }
 
@@ -2221,68 +2223,127 @@ const GAME_HTML = `<!DOCTYPE html>
     function buildGardenSvg(isBot, vbW) {
       const p = isBot ? 'b' : 't';
       const R = rng(isBot ? 9402 : 4209);
-      const greensBack = ['#14532d', '#166534'];
-      const greensMid = ['#15803d', '#16a34a'];
-      const greensTop = ['#22c55e', '#4ade80'];
-      const baseEdgeY = isBot ? 76 : 0;
-      const waveDir = isBot ? -1 : 1;
-      let waveBack = 'M-20,' + baseEdgeY;
-      let waveFront = 'M-20,' + baseEdgeY;
-      for (let x = -20; x <= vbW + 24; x += 22) {
-        const y1 = baseEdgeY + waveDir * (24 + R() * 14);
-        const y2 = baseEdgeY + waveDir * (14 + R() * 12);
-        waveBack += ' L' + x + ',' + y1.toFixed(1);
-        waveFront += ' L' + x + ',' + y2.toFixed(1);
-      }
-      waveBack += ' L' + (vbW + 24) + ',' + baseEdgeY + ' Z';
-      waveFront += ' L' + (vbW + 24) + ',' + baseEdgeY + ' Z';
-      let leavesBack = '', leavesMid = '', leavesFront = '', flowers = '';
+      const vbH = 110;
+      const edgeY = isBot ? vbH + 6 : -6;
+      const dir = isBot ? -1 : 1;
       const baseRot = isBot ? 180 : 0;
-      for (let x = -8; x <= vbW + 14; x += 15) {
-        const yB = isBot ? (78 - R() * 20) : (-2 + R() * 20);
-        const aB = baseRot + (R() - 0.5) * 98;
-        const sB = (0.95 + R() * 0.45).toFixed(2);
-        const cB = greensBack[Math.floor(R() * greensBack.length)];
-        leavesBack += '<use href="#lf-' + p + '" fill="' + cB + '" transform="translate(' + x.toFixed(1) + ',' + yB.toFixed(1) + ') rotate(' + aB.toFixed(1) + ') scale(' + sB + ')"/>';
 
-        const xM = x + (R() - 0.5) * 8;
-        const yM = isBot ? (74 - R() * 26) : (2 + R() * 24);
-        const aM = baseRot + (R() - 0.5) * 104;
-        const sM = (0.82 + R() * 0.42).toFixed(2);
-        const cM = greensMid[Math.floor(R() * greensMid.length)];
-        leavesMid += '<use href="#lf-' + p + '" fill="' + cM + '" transform="translate(' + xM.toFixed(1) + ',' + yM.toFixed(1) + ') rotate(' + aM.toFixed(1) + ') scale(' + sM + ')"/>';
+      // Soft scalloped hedge canopy silhouette (no spiky polygons)
+      let canopyBack = '<rect x="-20" y="' + (isBot ? vbH - 30 : -8) + '" width="' + (vbW + 40) + '" height="38" fill="#0b3319"/>';
+      let canopyMid = '<rect x="-20" y="' + (isBot ? vbH - 22 : -8) + '" width="' + (vbW + 40) + '" height="30" fill="#134e26"/>';
+      for (let x = -14; x <= vbW + 20; x += 22) {
+        const edgeBoost = (x < vbW * 0.16 || x > vbW * 0.84) ? 7 : 0;
+        const r1 = (17 + R() * 10 + edgeBoost * 0.5).toFixed(1);
+        const y1 = (edgeY + dir * (26 + R() * 14 + edgeBoost)).toFixed(1);
+        canopyBack += '<circle cx="' + x.toFixed(1) + '" cy="' + y1 + '" r="' + r1 + '" fill="#0d3b1e"/>';
 
-        if (R() < 0.72) {
-          const xF = x + (R() - 0.5) * 10;
-          const yF = isBot ? (70 - R() * 26) : (4 + R() * 24);
-          const aF = baseRot + (R() - 0.5) * 96;
-          const sF = (0.68 + R() * 0.36).toFixed(2);
-          const cF = greensTop[Math.floor(R() * greensTop.length)];
-          leavesFront += '<use href="#lf-' + p + '" fill="' + cF + '" transform="translate(' + xF.toFixed(1) + ',' + yF.toFixed(1) + ') rotate(' + aF.toFixed(1) + ') scale(' + sF + ')"/>';
+        const r2 = (14 + R() * 9 + edgeBoost * 0.4).toFixed(1);
+        const y2 = (edgeY + dir * (20 + R() * 12 + edgeBoost * 0.7)).toFixed(1);
+        canopyMid += '<circle cx="' + (x + (R() - 0.5) * 10).toFixed(1) + '" cy="' + y2 + '" r="' + r2 + '" fill="#14532d"/>';
+      }
+
+      const leafTypes = ['lfa', 'lfb', 'lfc'];
+      let sprigsDk = '', sprigsMd = '', sprigsLt = '', flowers = '';
+
+      function placeLeaf(tone, x, y, rot, sc) {
+        const type = leafTypes[Math.floor(R() * leafTypes.length)];
+        const out = '<use href="#' + type + '-' + tone + '-' + p + '" transform="translate(' + x.toFixed(1) + ',' + y.toFixed(1) + ') rotate(' + rot.toFixed(1) + ') scale(' + sc.toFixed(2) + ')"/>';
+        if (tone === 'dk') sprigsDk += out;
+        else if (tone === 'md') sprigsMd += out;
+        else sprigsLt += out;
+      }
+
+      // Organic 3-leaf botanical clusters fanned sideways & diagonally along the border
+      for (let x = -6; x <= vbW + 14; x += 24) {
+        const edgeBoost = (x < vbW * 0.17 || x > vbW * 0.83) ? 8 : 0;
+        const drift = (R() - 0.5) * 8;
+
+        // Back shadow sprig (2-3 deep leaves framing underside)
+        const axDk = x + drift;
+        const ayDk = edgeY + dir * (18 + R() * 22 + edgeBoost);
+        const stemDk = baseRot + (R() - 0.5) * 90;
+        placeLeaf('dk', axDk, ayDk, stemDk - 42, 0.92 + R() * 0.30);
+        placeLeaf('dk', axDk + (R() - 0.5) * 6, ayDk, stemDk + 36, 0.88 + R() * 0.30);
+        if (R() < 0.65) placeLeaf('dk', axDk, ayDk + dir * 4, stemDk + (R() - 0.5) * 26, 0.85 + R() * 0.28);
+
+        // Mid lush emerald sprig (3-leaf splayed rosette)
+        const axMd = x + (R() - 0.5) * 10;
+        const ayMd = edgeY + dir * (14 + R() * 20 + edgeBoost * 0.85);
+        const stemMd = baseRot + (R() - 0.5) * 110;
+        placeLeaf('md', axMd, ayMd, stemMd - 46, 0.84 + R() * 0.28);
+        placeLeaf('md', axMd, ayMd, stemMd + 44, 0.82 + R() * 0.28);
+        placeLeaf('md', axMd + (R() - 0.5) * 5, ayMd + dir * 3, stemMd + (R() - 0.5) * 20, 0.78 + R() * 0.28);
+
+        // Front sunlit bright lime-green young shoots
+        if (R() < 0.82) {
+          const axLt = x + (R() - 0.5) * 12;
+          const ayLt = edgeY + dir * (11 + R() * 18 + edgeBoost * 0.6);
+          const stemLt = baseRot + (R() - 0.5) * 125;
+          placeLeaf('lt', axLt, ayLt, stemLt - 28, 0.68 + R() * 0.28);
+          if (R() < 0.58) placeLeaf('lt', axLt, ayLt, stemLt + 34, 0.64 + R() * 0.24);
         }
       }
-      for (let x = 18; x <= vbW - 14; x += 40) {
-        const fx = x + (R() - 0.5) * 18;
-        const fy = isBot ? (38 + R() * 25) : (13 + R() * 25);
-        const fs = (0.72 + R() * 0.42).toFixed(2);
+
+      // Delicate 5-petal white jasmine flowers & small buds tucked in clusters
+      for (let x = 22; x <= vbW - 16; x += 36 + Math.floor(R() * 20)) {
+        const edgeBoost = (x < vbW * 0.16 || x > vbW * 0.84) ? 5 : 0;
+        const fx = x + (R() - 0.5) * 16;
+        const fy = edgeY + dir * (18 + R() * 24 + edgeBoost);
+        const fs = (0.78 + R() * 0.34).toFixed(2);
         const fr = (R() * 72).toFixed(1);
-        flowers += '<use href="#fl-' + p + '" transform="translate(' + fx.toFixed(1) + ',' + fy.toFixed(1) + ') rotate(' + fr + ') scale(' + fs + ')"/>';
+        flowers += '<use href="#flw-' + p + '" transform="translate(' + fx.toFixed(1) + ',' + fy.toFixed(1) + ') rotate(' + fr + ') scale(' + fs + ')"/>';
+
+        // Secondary companion bud/mini-blossom in ~45% of spots
+        if (R() < 0.48) {
+          const bx = fx + (R() < 0.5 ? -1 : 1) * (10 + R() * 6);
+          const by = fy + (R() - 0.5) * 10;
+          flowers += '<use href="#flb-' + p + '" transform="translate(' + bx.toFixed(1) + ',' + by.toFixed(1) + ') rotate(' + (R() * 90).toFixed(1) + ') scale(' + (0.72 + R() * 0.24).toFixed(2) + ')"/>';
+        }
       }
-      const defs = '<defs>' +
-        '<g id="lf-' + p + '"><path d="M0,0 C9,6 10,19 0,28 C-10,19 -9,6 0,0 Z"/><path d="M0,4 L0,23" fill="none" stroke="rgba(220,252,231,0.28)" stroke-width="1.1" stroke-linecap="round"/></g>' +
-        '<g id="fl-' + p + '"><circle cx="0" cy="-4.1" r="2.7" fill="#f1f5f9"/><circle cx="3.9" cy="-1.3" r="2.7" fill="#ffffff"/><circle cx="2.4" cy="3.3" r="2.7" fill="#f1f5f9"/><circle cx="-2.4" cy="3.3" r="2.7" fill="#ffffff"/><circle cx="-3.9" cy="-1.3" r="2.7" fill="#ffffff"/><circle cx="0" cy="0" r="2.2" fill="#facc15"/><circle cx="0" cy="0" r="1.0" fill="#f59e0b"/></g>' +
+
+      const gradDefs =
+        '<linearGradient id="gdk-' + p + '" x1="0" y1="0" x2="0.3" y2="1"><stop offset="0%" stop-color="#092e15"/><stop offset="100%" stop-color="#166534"/></linearGradient>' +
+        '<linearGradient id="gmd-' + p + '" x1="0" y1="0" x2="0.3" y2="1"><stop offset="0%" stop-color="#114924"/><stop offset="55%" stop-color="#16a34a"/><stop offset="100%" stop-color="#22c55e"/></linearGradient>' +
+        '<linearGradient id="glt-' + p + '" x1="0" y1="0" x2="0.3" y2="1"><stop offset="0%" stop-color="#15803d"/><stop offset="55%" stop-color="#4ade80"/><stop offset="100%" stop-color="#86efac"/></linearGradient>';
+
+      let leafDefs = '';
+      const tones = ['dk', 'md', 'lt'];
+      for (let ti = 0; ti < tones.length; ti++) {
+        const tn = tones[ti];
+        const fill = 'url(#g' + tn + '-' + p + ')';
+        const veinCol = tn === 'lt' ? 'rgba(240,253,244,0.45)' : 'rgba(220,252,231,0.28)';
+        leafDefs +=
+          '<g id="lfa-' + tn + '-' + p + '"><path d="M0,0 C10,1 14,13 9,23 C5,30 1.5,33 0,34 C-1.5,33 -5,30 -9,23 C-14,13 -10,1 0,0 Z" fill="' + fill + '" stroke="#072512" stroke-width="0.9"/><path d="M0,2 Q1.2,16 0,31 M0.5,11 Q4.8,14 7,18 M-0.5,15 Q-4.8,18 -6.8,22" fill="none" stroke="' + veinCol + '" stroke-width="0.95" stroke-linecap="round"/></g>' +
+          '<g id="lfb-' + tn + '-' + p + '"><path d="M0,0 C11,2 13,15 5,26 C2,31 -1,33 -2,34 C-5,29 -9,20 -8,11 C-7,4 -3,1 0,0 Z" fill="' + fill + '" stroke="#072512" stroke-width="0.9"/><path d="M0,2 Q3,16 -1.5,31 M1.4,12 Q5.2,15 6.4,19" fill="none" stroke="' + veinCol + '" stroke-width="0.95" stroke-linecap="round"/></g>' +
+          '<g id="lfc-' + tn + '-' + p + '"><path d="M0,0 C7,2 9,11 6,19 C3,24 1,27 0,28 C-1,27 -3,24 -6,19 C-9,11 -7,2 0,0 Z" fill="' + fill + '" stroke="#072512" stroke-width="0.85"/><path d="M0,2 L0,25" fill="none" stroke="' + veinCol + '" stroke-width="0.9" stroke-linecap="round"/></g>';
+      }
+
+      const petalPath = 'M0,0 C-2.4,-2.5 -3.6,-6.9 0,-8.6 C3.6,-6.9 2.4,-2.5 0,0 Z';
+      let flwPetals = '<circle cx="0" cy="0.6" r="8.2" fill="rgba(5,26,11,0.42)"/>';
+      for (let pi = 0; pi < 5; pi++) {
+        const pCol = pi % 2 === 0 ? '#ffffff' : '#f1f5f9';
+        flwPetals += '<path d="' + petalPath + '" fill="' + pCol + '" stroke="#cbd5e1" stroke-width="0.35" transform="rotate(' + (pi * 72) + ')"/>';
+      }
+      flwPetals += '<circle cx="0" cy="0" r="2.6" fill="#d97706"/><circle cx="0" cy="0" r="1.95" fill="#facc15"/><circle cx="-0.6" cy="-0.6" r="0.65" fill="#fef9c3"/>';
+
+      let flbPetals = '<circle cx="0" cy="0.4" r="5.5" fill="rgba(5,26,11,0.38)"/>';
+      for (let bi = 0; bi < 4; bi++) {
+        flbPetals += '<path d="M0,0 C-1.8,-1.8 -2.6,-4.8 0,-6.0 C2.6,-4.8 1.8,-1.8 0,0 Z" fill="#ffffff" stroke="#cbd5e1" stroke-width="0.3" transform="rotate(' + (bi * 90 + 22) + ')"/>';
+      }
+      flbPetals += '<circle cx="0" cy="0" r="1.8" fill="#facc15"/>';
+
+      const defs = '<defs>' + gradDefs + leafDefs +
+        '<g id="flw-' + p + '">' + flwPetals + '</g>' +
+        '<g id="flb-' + p + '">' + flbPetals + '</g>' +
         '</defs>';
-      return '<svg viewBox="0 0 ' + vbW + ' 76" preserveAspectRatio="' + (isBot ? 'xMidYMax slice' : 'xMidYMin slice') + '">' +
-        defs +
-        '<path d="' + waveBack + '" fill="#14532d"/>' +
-        leavesBack +
-        '<path d="' + waveFront + '" fill="#166534" opacity="0.92"/>' +
-        leavesMid + leavesFront + flowers +
+
+      return '<svg viewBox="0 0 ' + vbW + ' ' + vbH + '" preserveAspectRatio="' + (isBot ? 'xMidYMax slice' : 'xMidYMin slice') + '">' +
+        defs + canopyBack + sprigsDk + canopyMid + sprigsMd + sprigsLt + flowers +
         '</svg>';
     }
     function initGardenBorders() {
       const vw = (typeof window !== 'undefined' && window.innerWidth) ? window.innerWidth : 420;
-      const vbW = Math.max(520, Math.round((vw + 20) * 76 / 46));
+      const vbW = Math.max(540, Math.round((vw + 20) * 110 / 64));
       if ($('garden-top')) $('garden-top').innerHTML = buildGardenSvg(false, vbW);
       if ($('garden-bot')) $('garden-bot').innerHTML = buildGardenSvg(true, vbW);
     }
