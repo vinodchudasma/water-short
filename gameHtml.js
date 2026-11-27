@@ -342,7 +342,7 @@ const GAME_HTML = `<!DOCTYPE html>
       contain: layout;
       border-top-width: 0;
       background: linear-gradient(90deg, #ffffff1c, #ffffff05 40%, #0003);
-      transition: transform .4s cubic-bezier(.3, .7, .3, 1);
+      transition: transform var(--bt, .4s) cubic-bezier(.3, .7, .3, 1);
       cursor: pointer;
       touch-action: manipulation
     }
@@ -494,7 +494,7 @@ const GAME_HTML = `<!DOCTYPE html>
     footer {
       display: flex;
       justify-content: center;
-      gap: 22px
+      gap: 18px
     }
 
     .pw {
@@ -523,7 +523,7 @@ const GAME_HTML = `<!DOCTYPE html>
       box-shadow: 0 2px 0 #b8901c
     }
 
-    .pw.off .ib {
+    .pw.off .ib, .ib.off {
       opacity: .4
     }
 
@@ -991,20 +991,6 @@ const GAME_HTML = `<!DOCTYPE html>
       cursor: pointer;
       touch-action: manipulation;
       transition: transform .28s cubic-bezier(.3, .7, .3, 1);
-      will-change: transform;
-      contain: layout style;
-    }
-
-    .shape-wrap::before {
-      content: "";
-      position: absolute;
-      inset: -14px;
-      border-radius: 50%;
-      background: radial-gradient(circle, var(--scol, rgba(56, 189, 248, 0.7)) 0%, rgba(0, 0, 0, 0) 68%);
-      opacity: 0;
-      z-index: -1;
-      pointer-events: none;
-      transition: opacity .28s ease-out, transform .28s ease-out;
     }
 
     .shape-wrap:active {
@@ -1015,13 +1001,8 @@ const GAME_HTML = `<!DOCTYPE html>
       transform: scale(1.04);
     }
 
-    .shape-wrap.ready::before {
-      opacity: 0.42;
-      transform: scale(1.04);
-    }
-
-    .shape-wrap.done::before {
-      opacity: 0.48;
+    .shape-wrap.done {
+      box-shadow: none;
     }
 
     .shape-wrap svg {
@@ -1031,7 +1012,14 @@ const GAME_HTML = `<!DOCTYPE html>
       display: block;
     }
 
-    #shape-liq-wrap {
+    .shape-pair {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: var(--mgap, 18px);
+    }
+
+    .shape-liq-wrap {
       transition: transform var(--d, .45s) cubic-bezier(.45, 0, .3, 1);
       will-change: transform;
     }
@@ -1080,7 +1068,7 @@ const GAME_HTML = `<!DOCTYPE html>
       transform: translateY(0px);
     }
 
-    #shape-fish {
+    .shape-fish {
       transition: transform var(--d, .45s) cubic-bezier(.45, 0, .3, 1);
     }
 
@@ -1094,16 +1082,47 @@ const GAME_HTML = `<!DOCTYPE html>
       50% { transform: translate(3px, -2.5px) rotate(3deg); }
     }
 
-    #lvin {
-      width: 150px;
-      margin: 0 0 18px;
-      padding: 10px 14px;
+    .st-inputs {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin: 4px 0 18px;
+    }
+
+    .st-field {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+      min-width: 0;
+      text-align: left;
+    }
+
+    .st-field span {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.6px;
+      text-transform: uppercase;
+      color: var(--mute);
+      padding-left: 4px;
+    }
+
+    #lvin, #spin {
+      width: 100%;
+      box-sizing: border-box;
+      margin: 0;
+      padding: 10px 10px;
       border-radius: 14px;
       border: 2px solid #b794ff66;
       background: #150b33;
       color: var(--ink);
-      font: 600 28px 'Fredoka', sans-serif;
-      text-align: center
+      font: 600 24px 'Fredoka', sans-serif;
+      text-align: center;
+      outline: none;
+      transition: border-color .18s;
+    }
+
+    #lvin:focus, #spin:focus {
+      border-color: #ffd23f;
     }
 
     .key {
@@ -1131,6 +1150,7 @@ const GAME_HTML = `<!DOCTYPE html>
     <footer>
       <div class="pw"><button class="ib" id="un" aria-label="Undo">↶</button><i id="unc">5</i></div>
       <div class="pw"><button class="ib" id="ab" aria-label="Add a bottle">+</button><i id="abc">2</i></div>
+      <div class="pw"><button class="ib" id="bm" aria-label="Toggle music">♪</button></div>
       <div class="pw"><button class="ib" id="au" aria-label="Auto play">▶</button></div>
     </footer>
   </div>
@@ -1147,20 +1167,25 @@ const GAME_HTML = `<!DOCTYPE html>
         <button type="button" class="mode-btn" id="m-shape">
           <span class="mode-ico">💎</span>
           <span class="mode-name">Shape Fill</span>
-          <span class="mode-sub">Fill the shape</span>
+          <span class="mode-sub">Single &amp; Multi</span>
         </button>
         <button type="button" class="mode-btn" id="m-mix">
           <span class="mode-ico">✨</span>
           <span class="mode-name">Mix Mode</span>
-          <span class="mode-sub">Normal•Pipe•Shape</span>
+          <span class="mode-sub">Normal•Pipe•Shape•2x</span>
         </button>
       </div>
       <div class="theme-switch" role="group" aria-label="Background theme">
         <button type="button" class="theme-btn on" id="th-cosmic">🌌 Cosmic Blue</button>
         <button type="button" class="theme-btn" id="th-wood">🌿 Wood Garden</button>
       </div>
-      <p id="st-sub">Enter the level you want to start from</p><input id="lvin" type="number" inputmode="numeric" min="1"
-        max="99999" value="1" aria-label="Start level"><br><button class="go" id="play">Play</button>
+      <p id="st-sub">Choose level &amp; game speed (1 = Normal, 2 = 2x Fast)</p>
+      <div class="st-inputs">
+        <label class="st-field"><span>Level</span><input id="lvin" type="number" inputmode="numeric" min="1"
+            max="99999" value="1" aria-label="Start level"></label>
+        <label class="st-field"><span>Speed (x)</span><input id="spin" type="number" inputmode="decimal" min="0.2"
+            max="10" step="0.1" value="1" aria-label="Game speed"></label>
+      </div><button class="go" id="play">Play</button>
     </div>
   </div>
   <div id="toast"></div>
@@ -1193,8 +1218,8 @@ const GAME_HTML = `<!DOCTYPE html>
       '#1e3a8a', '#fed7aa', '#86efac', '#7dd3fc', '#881337', '#c4b5fd'
     ];
     const CAP = 4, $ = s => document.getElementById(s), sleep = ms => new Promise(r => setTimeout(r, ms));
-    let mode = 'classic', theme = 'cosmic', L = 1, SL = 1, ML = 1, B = [], cov = [], els = [], sel = null, busy = false, hist = [], undos = 5, adds = 2, sound = true, ac = null;
-    let shapeState = null;
+    let mode = 'classic', theme = 'cosmic', L = 1, SL = 1, ML = 1, gameSpeed = 1, B = [], cov = [], els = [], sel = null, busy = false, hist = [], undos = 5, adds = 2, sound = true, bgmOn = true, ac = null;
+    let shapes = [];
     try {
       L = Math.max(1, parseInt(localStorage.getItem('ws_level')) || 1);
       SL = Math.max(1, parseInt(localStorage.getItem('ws_shape_level')) || 1);
@@ -1202,8 +1227,23 @@ const GAME_HTML = `<!DOCTYPE html>
       const savedMode = localStorage.getItem('ws_mode');
       if (savedMode === 'shape' || savedMode === 'mix') mode = savedMode;
       if (localStorage.getItem('ws_theme') === 'wood') theme = 'wood';
+      const savedSpeed = parseFloat(localStorage.getItem('ws_speed'));
+      if (Number.isFinite(savedSpeed) && savedSpeed >= 0.2 && savedSpeed <= 10) gameSpeed = Math.round(savedSpeed * 100) / 100;
+      if (localStorage.getItem('ws_bgm') === '0') bgmOn = false;
     } catch (e) { }
     const curLv = () => mode === 'shape' ? SL : (mode === 'mix' ? ML : L);
+    function clampSpeed(v) {
+      const n = Number(v);
+      if (!Number.isFinite(n) || n <= 0) return 1;
+      return Math.min(10, Math.max(0.2, Math.round(n * 100) / 100));
+    }
+    function applySpeed(v, persist = true) {
+      gameSpeed = clampSpeed(v);
+      if (persist) { try { localStorage.setItem('ws_speed', String(gameSpeed)) } catch (e) { } }
+      SP = (auto ? 1.15 : 1.42) / gameSpeed;
+      document.documentElement.style.setProperty('--bt', Math.round(400 / gameSpeed) + 'ms');
+      if ($('spin') && document.activeElement !== $('spin')) $('spin').value = gameSpeed;
+    }
     function setLv(v) {
       const n = v >= 1 ? Math.min(v, 99999) : 1;
       if (mode === 'shape') { SL = n; try { localStorage.setItem('ws_shape_level', SL) } catch (e) { } }
@@ -1211,22 +1251,49 @@ const GAME_HTML = `<!DOCTYPE html>
       else { L = n; try { localStorage.setItem('ws_level', L) } catch (e) { } }
     }
     function advanceLv() { setLv(curLv() + 1); }
-    const mixStep = lv => (lv - 1) % 3;
-    function resolveShapeForLevel(lv, m = mode) {
+    const mixStep = lv => (lv - 1) % 4;
+    function pickMultiPair(seedIdx) {
+      const crystal = SHAPES.slice(1);
+      const kind = seedIdx % 3;
+      if (kind === 0) {
+        return [PIPE_SHAPES[seedIdx % PIPE_SHAPES.length], crystal[seedIdx % crystal.length]];
+      }
+      if (kind === 1) {
+        const a = crystal[seedIdx % crystal.length];
+        const b = crystal[(seedIdx + 1 + Math.floor(seedIdx / crystal.length)) % crystal.length];
+        return [a, a.id === b.id ? crystal[(seedIdx + 2) % crystal.length] : b];
+      }
+      const pA = PIPE_SHAPES[seedIdx % PIPE_SHAPES.length];
+      const pB = PIPE_SHAPES[(seedIdx + 1) % PIPE_SHAPES.length];
+      return [pA, pA.id === pB.id ? crystal[0] : pB];
+    }
+    function resolveShapesForLevel(lv, m = mode) {
       if (m === 'shape') {
+        if (lv === 1) return [PIPE_SHAPES[0]];
+        if (lv === 2) return [SHAPES[1]];
+        const rr = rng(lv * 4999 + 17);
+        const isMulti = lv === 4 || rr() < 0.42;
+        if (isMulti) {
+          const iA = Math.floor(rr() * ALL_SHAPES.length);
+          let iB = Math.floor(rr() * (ALL_SHAPES.length - 1));
+          if (iB >= iA) iB++;
+          return [ALL_SHAPES[iA], ALL_SHAPES[iB]];
+        }
         const slot = (lv - 1) % SHAPES.length;
-        if (slot === 0) return PIPE_SHAPES[Math.floor((lv - 1) / SHAPES.length) % PIPE_SHAPES.length];
-        return SHAPES[slot];
+        if (slot === 0) return [PIPE_SHAPES[Math.floor((lv - 1) / SHAPES.length) % PIPE_SHAPES.length]];
+        return [SHAPES[slot]];
       }
       if (m === 'mix') {
         const st = mixStep(lv);
-        if (st === 1) return PIPE_SHAPES[Math.floor((lv - 1) / 3) % PIPE_SHAPES.length];
+        const cycle = Math.floor((lv - 1) / 4);
+        if (st === 1) return [PIPE_SHAPES[cycle % PIPE_SHAPES.length]];
         if (st === 2) {
           const nonPipe = SHAPES.slice(1);
-          return nonPipe[Math.floor((lv - 1) / 3) % nonPipe.length];
+          return [nonPipe[cycle % nonPipe.length]];
         }
+        if (st === 3) return pickMultiPair(cycle);
       }
-      return null;
+      return [];
     }
 
     const PIPE_SHAPES = [
@@ -1481,6 +1548,151 @@ const GAME_HTML = `<!DOCTYPE html>
       });
     }
 
+    // 100% Procedural Copyright-Free Lo-Fi Kalimba + Warm Felt Pad BGM (steady continuous mix under ASMR SFX)
+    const BGM_BASE_VOL = 0.30;
+    const BGM_CHORDS = [
+      { pad: [174.61, 261.63, 329.63, 392.00], bass: 174.61 }, // Fmaj9
+      { pad: [196.00, 246.94, 293.66, 329.63], bass: 196.00 }, // G6
+      { pad: [164.81, 246.94, 293.66, 392.00], bass: 164.81 }, // Em7
+      { pad: [220.00, 261.63, 329.63, 493.88], bass: 110.00 }  // Am9
+    ];
+    const BGM_PHRASES = [
+      [
+        523.25, null, 659.25, 587.33, 523.25, null, 440.00, 392.00,
+        493.88, null, 587.33, 659.25, 587.33, null, 493.88, 440.00,
+        392.00, null, 493.88, 587.33, 523.25, 493.88, 440.00, null,
+        523.25, null, 659.25, 587.33, 523.25, 493.88, 440.00, null
+      ],
+      [
+        440.00, 523.25, 659.25, null, 783.99, 659.25, 587.33, null,
+        587.33, null, 659.25, 783.99, 659.25, 587.33, 493.88, null,
+        659.25, null, 587.33, 493.88, 523.25, null, 392.00, 440.00,
+        440.00, 523.25, 587.33, 659.25, 523.25, null, 392.00, null
+      ],
+      [
+        659.25, null, 523.25, 587.33, 659.25, 783.99, 659.25, null,
+        587.33, 493.88, 587.33, null, 783.99, 659.25, 587.33, 493.88,
+        493.88, null, 659.25, 587.33, 523.25, 493.88, 392.00, null,
+        440.00, 493.88, 523.25, 659.25, 587.33, 523.25, 440.00, null
+      ]
+    ];
+    let bgmBus = null, bgmFilter = null, bgmTimer = null, bgmRunning = false, bgmStep = 0, bgmPhrase = 0;
+
+    function ensureBgmBus(ctx) {
+      if (bgmBus) return bgmBus;
+      bgmFilter = ctx.createBiquadFilter();
+      bgmFilter.type = 'lowpass';
+      bgmFilter.frequency.value = 1350;
+      bgmFilter.Q.value = 0.65;
+      bgmBus = ctx.createGain();
+      bgmBus.gain.value = bgmOn ? BGM_BASE_VOL : 0.0001;
+      bgmBus.connect(bgmFilter);
+      bgmFilter.connect(ctx.destination);
+      return bgmBus;
+    }
+
+    function playBgmChord(ctx, bus, freqs, when, dur) {
+      freqs.forEach((f, idx) => {
+        const osc = ctx.createOscillator(), g = ctx.createGain();
+        osc.type = idx === 0 ? 'triangle' : 'sine';
+        osc.frequency.setValueAtTime(f, when);
+        const pk = idx === 0 ? 0.011 : 0.0085;
+        g.gain.setValueAtTime(0.0001, when);
+        g.gain.linearRampToValueAtTime(pk, when + 0.55);
+        g.gain.setValueAtTime(pk * 0.88, when + Math.max(0.65, dur - 0.65));
+        g.gain.exponentialRampToValueAtTime(0.0001, when + dur);
+        osc.connect(g); g.connect(bus);
+        osc.start(when); osc.stop(when + dur + 0.05);
+      });
+    }
+
+    function playBgmPluck(ctx, bus, freq, when, dur, peakGain, shimmer = false) {
+      const osc = ctx.createOscillator(), g = ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(freq, when);
+      g.gain.setValueAtTime(0.0001, when);
+      g.gain.linearRampToValueAtTime(peakGain, when + 0.02);
+      g.gain.exponentialRampToValueAtTime(0.0001, when + dur);
+      osc.connect(g); g.connect(bus);
+      osc.start(when); osc.stop(when + dur + 0.04);
+
+      if (shimmer) {
+        const over = ctx.createOscillator(), og = ctx.createGain();
+        over.type = 'triangle';
+        over.frequency.setValueAtTime(freq * 2, when);
+        og.gain.setValueAtTime(0.0001, when);
+        og.gain.linearRampToValueAtTime(peakGain * 0.18, when + 0.015);
+        og.gain.exponentialRampToValueAtTime(0.0001, when + dur * 0.45);
+        over.connect(og); og.connect(bus);
+        over.start(when); over.stop(when + dur * 0.5 + 0.02);
+      }
+    }
+
+    function scheduleBgmStep() {
+      if (!bgmRunning || !bgmOn || !sound) return;
+      const ctx = getAudioCtx();
+      if (!ctx) return;
+      const bus = ensureBgmBus(ctx);
+      const stepSec = 0.415; // Gentle ~72 BPM eighth-note pulse
+      const when = ctx.currentTime + 0.04;
+      const stepIdx = bgmStep % 32;
+
+      if (stepIdx % 8 === 0) {
+        const ch = BGM_CHORDS[Math.floor(stepIdx / 8)];
+        playBgmChord(ctx, bus, ch.pad, when, stepSec * 8.1);
+      } else if (stepIdx % 8 === 4) {
+        const ch = BGM_CHORDS[Math.floor(stepIdx / 8)];
+        playBgmPluck(ctx, bus, ch.bass, when, 1.35, 0.012, false);
+      }
+
+      const mel = BGM_PHRASES[bgmPhrase % BGM_PHRASES.length][stepIdx];
+      if (mel) {
+        const accent = stepIdx % 4 === 0;
+        playBgmPluck(ctx, bus, mel, when, accent ? 1.55 : 1.05, accent ? 0.021 : 0.015, accent);
+      }
+
+      bgmStep = (bgmStep + 1) % 32;
+      if (bgmStep === 0) bgmPhrase = (bgmPhrase + 1) % BGM_PHRASES.length;
+      bgmTimer = setTimeout(scheduleBgmStep, stepSec * 1000);
+    }
+
+    function syncBgmBtn() {
+      if ($('bm')) $('bm').classList.toggle('off', !bgmOn);
+    }
+
+    function startBgm() {
+      if (!sound || !bgmOn || bgmRunning) return;
+      const ctx = getAudioCtx();
+      if (!ctx) return;
+      const bus = ensureBgmBus(ctx);
+      const now = ctx.currentTime;
+      try { bus.gain.cancelScheduledValues(now); } catch (e) {}
+      bus.gain.setValueAtTime(Math.max(0.0001, bus.gain.value || 0.0001), now);
+      bus.gain.linearRampToValueAtTime(BGM_BASE_VOL, now + 0.25);
+      bgmRunning = true;
+      scheduleBgmStep();
+    }
+
+    function stopBgm() {
+      if (bgmTimer) { clearTimeout(bgmTimer); bgmTimer = null; }
+      bgmRunning = false;
+      if (bgmBus && ac) {
+        const now = ac.currentTime;
+        try { bgmBus.gain.cancelScheduledValues(now); } catch (e) {}
+        bgmBus.gain.setValueAtTime(Math.max(0.0001, bgmBus.gain.value || 0.0001), now);
+        bgmBus.gain.linearRampToValueAtTime(0.0001, now + 0.15);
+      }
+    }
+
+    function toggleBgm() {
+      bgmOn = !bgmOn;
+      try { localStorage.setItem('ws_bgm', bgmOn ? '1' : '0') } catch (e) { }
+      syncBgmBtn();
+      if (bgmOn) startBgm();
+      else stopBgm();
+    }
+    window.__wsStartBgm = startBgm;
+
     function toast(t) { const e = $('toast'); e.textContent = t; e.classList.add('on'); clearTimeout(toast.t); toast.t = setTimeout(() => e.classList.remove('on'), 2200) }
 
     function params(l) {
@@ -1545,63 +1757,96 @@ const GAME_HTML = `<!DOCTYPE html>
         return { b, cv };
       }
     }
-    const full = x => x.length === CAP && x.every(u => u.c === x[0].c && !u.h) && !(shapeState && x[0].c === shapeState.color);
+    const full = x => x.length === CAP && x.every(u => u.c === x[0].c && !u.h) && !shapes.some(sh => sh.color === x[0].c);
     function solved(b) { return b.every(x => !x.length || full(x)) }
-    const isGameWon = () => shapeState ? Boolean(shapeState.units >= shapeState.cap && solved(B)) : solved(B);
+    const isGameWon = () => shapes.length ? shapes.every(sh => sh.units >= sh.cap) : solved(B);
 
-    function paramsShape(l, overrideShape) {
-      const sh = overrideShape || resolveShapeForLevel(l, 'shape') || PIPE_SHAPES[0];
-      const targetColor = ((l - 1) * 3) % 8;
-      let initUnits, needed, other;
-      if (l <= 2) { initUnits = 1; needed = 4; other = 3; }         // 6 bottles (4 filled), cap 5 -> 1 T/bottle
-      else if (l <= 5) { initUnits = 2; needed = 4; other = 4; }    // 7 bottles (5 filled), cap 6 -> 1 T/bottle
-      else if (l <= 12) { initUnits = 1; needed = 8; other = 4; }   // 8 bottles (6 filled), cap 9 -> isolated single T
-      else if (l <= 24) { initUnits = 2; needed = 8; other = 5; }   // 9 bottles (7 filled), cap 10 -> isolated single T
-      else if (l <= 49) { initUnits = 2; needed = 8; other = 6; }   // 10 bottles (8 filled), cap 10 -> 1 T/bottle
-      else if (l <= 99) { initUnits = 2; needed = 8; other = 7; }   // 11 bottles (9 filled), cap 10 -> 1 T/bottle
-      else if (l <= 199) { initUnits = 2; needed = 12; other = 7; } // 12 bottles (10 filled), cap 14 -> isolated single T
-      else if (l <= 299) { initUnits = 2; needed = 12; other = 8; } // 13 bottles (11 filled), cap 14 -> isolated single T
-      else if (l <= 399) { initUnits = 2; needed = 12; other = 9; } // 14 bottles (12 filled), cap 14 -> 1 T/bottle
-      else if (l < 475) {
-        const extra = Math.floor((l - 400) / 15);
-        initUnits = 3;
-        needed = 16; // 4 target bottles, cap 19
-        other = 9 + extra; // 15..19 bottles (13..17 filled -> mostly/all 1 T/bottle)
-      } else {
-        const extra = Math.floor((l - 475) / 15);
-        initUnits = 3;
-        needed = 20; // 5 target bottles, cap 23 -> strictly 1 T/bottle across 20 separate bottles!
-        other = Math.min(13 + extra, 18); // 5 target + 18 other + 2 empty = 25 bottles max at Lv 550+
+    function paramsShapes(l, targetDefs) {
+      const defs = (Array.isArray(targetDefs) && targetDefs.length) ? targetDefs : resolveShapesForLevel(l, 'shape');
+      if (defs.length === 1) {
+        const targetColor = ((l - 1) * 3) % 8;
+        let initUnits, needed, other;
+        if (l <= 2) { initUnits = 1; needed = 4; other = 3; }
+        else if (l <= 5) { initUnits = 2; needed = 4; other = 4; }
+        else if (l <= 12) { initUnits = 1; needed = 8; other = 4; }
+        else if (l <= 24) { initUnits = 2; needed = 8; other = 5; }
+        else if (l <= 49) { initUnits = 2; needed = 8; other = 6; }
+        else if (l <= 99) { initUnits = 2; needed = 8; other = 7; }
+        else if (l <= 199) { initUnits = 2; needed = 12; other = 7; }
+        else if (l <= 299) { initUnits = 2; needed = 12; other = 8; }
+        else if (l <= 399) { initUnits = 2; needed = 12; other = 9; }
+        else if (l < 475) {
+          const extra = Math.floor((l - 400) / 15);
+          initUnits = 3; needed = 16; other = 9 + extra;
+        } else {
+          const extra = Math.floor((l - 475) / 15);
+          initUnits = 3; needed = 20; other = Math.min(13 + extra, 18);
+        }
+        const hide = l < 6 ? 0 : Math.min(0.25 + (Math.min(l, 400) / 400) * 0.55, 0.80);
+        return {
+          targets: [{ sh: defs[0], color: targetColor, initUnits, needed, cap: initUnits + needed }],
+          other,
+          hide
+        };
       }
-      const cap = initUnits + needed;
-      const hide = l < 6 ? 0 : Math.min(0.25 + (Math.min(l, 400) / 400) * 0.55, 0.80);
-      return { sh, targetColor, initUnits, needed, cap, other, hide };
+      const c0 = ((l - 1) * 3) % 8;
+      const c1 = (c0 + 2 + (l % 4)) % 8;
+      let init0 = 1, init1 = 1, needed0 = 4, needed1 = 4, other = 3;
+      if (l <= 6) { init0 = 1; init1 = 1; needed0 = 4; needed1 = 4; other = 3; }
+      else if (l <= 14) { init0 = 1; init1 = 1; needed0 = 4; needed1 = 4; other = 4; }
+      else if (l <= 49) { init0 = 2; init1 = 1; needed0 = 8; needed1 = 4; other = 5; }
+      else if (l <= 199) { init0 = 2; init1 = 2; needed0 = 8; needed1 = 8; other = 6; }
+      else if (l <= 399) { init0 = 2; init1 = 2; needed0 = 8; needed1 = 8; other = 8; }
+      else {
+        const extra = Math.floor((l - 400) / 20);
+        init0 = 2; init1 = 2; needed0 = 12; needed1 = 12; other = Math.min(10 + extra, 17);
+      }
+      const hide = l < 6 ? 0 : Math.min(0.25 + (Math.min(l, 400) / 400) * 0.55, 0.78);
+      return {
+        targets: [
+          { sh: defs[0], color: c0, initUnits: init0, needed: needed0, cap: init0 + needed0 },
+          { sh: defs[1], color: c1, initUnits: init1, needed: needed1, cap: init1 + needed1 }
+        ],
+        other,
+        hide
+      };
     }
 
-    function solveShape(b0, sh0, maxIt = 200000, maxMs = 2000) {
-      const T = sh0.color, cap = sh0.cap;
+    function solveShapes(b0, shs0, maxIt = 200000, maxMs = 2000) {
+      if (!shs0 || !shs0.length) return null;
+      const Ts = shs0.map(sh => sh.color);
+      const caps = shs0.map(sh => sh.cap);
       const st0 = b0.map(x => x.map(u => u.c + (u.h ? 64 : 0)));
-      const k = (s, su) => s.map(x => x.join(',')).sort().join('|') + '#' + su;
-      const done = (s, su) => su >= cap && s.every(x => !x.length || (x.length === CAP && x.every(c => c < 64 && c === x[0])));
-      const H = (s, su) => {
-        let h = (cap - su) * 2.5;
+      const k = (s, sus) => s.map(x => x.join(',')).sort().join('|') + '#' + sus.join(',');
+      const done = (s, sus) => sus.every((su, idx) => su >= caps[idx]);
+      const tMap = {};
+      Ts.forEach((c, idx) => { tMap[c] = idx; });
+      const H = (s, sus) => {
+        let h = 0;
+        for (let idx = 0; idx < caps.length; idx++) {
+          h += Math.max(0, caps[idx] - sus[idx]) * 2.5;
+        }
         for (const x of s) {
-          let i = 1;
-          while (i < x.length && (x[i] & 63) === (x[0] & 63)) i++;
-          h += x.length - i;
-          for (const v of x) if (v >= 64) h += 0.5;
+          for (let i = x.length - 1; i >= 0; i--) {
+            const ti = tMap[x[i] & 63];
+            if (ti !== undefined && sus[ti] < caps[ti]) {
+              h += (x.length - 1 - i) * 0.9;
+              if (x[i] >= 64) h += 0.5;
+            }
+          }
         }
         return h;
       };
-      const N = [{ s: st0, su: sh0.units, p: -1, m: null, g: 0 }];
-      const seen = new Set([k(st0, sh0.units)]);
-      const hp = [[H(st0, sh0.units) * 3, 0]];
+      const sus0 = shs0.map(sh => sh.units);
+      const N = [{ s: st0, sus: sus0, p: -1, m: null, g: 0 }];
+      const seen = new Set([k(st0, sus0)]);
+      const hp = [[H(st0, sus0) * 3, 0]];
       const push = e => { hp.push(e); let i = hp.length - 1; while (i > 0) { const p = (i - 1) >> 1; if (hp[p][0] <= hp[i][0]) break; [hp[p], hp[i]] = [hp[i], hp[p]]; i = p } };
       const pop = () => { const t = hp[0], l = hp.pop(); if (hp.length) { hp[0] = l; let i = 0; for (; ;) { const a = 2 * i + 1, c = a + 1; let m = i; if (a < hp.length && hp[a][0] < hp[m][0]) m = a; if (c < hp.length && hp[c][0] < hp[m][0]) m = c; if (m === i) break; [hp[m], hp[i]] = [hp[i], hp[m]]; i = m } } return t };
       const t0 = performance.now(); let it = 0;
       while (hp.length) {
-        const id = pop()[1], nd = N[id], s = nd.s, su = nd.su;
-        if (done(s, su)) {
+        const id = pop()[1], nd = N[id], s = nd.s, sus = nd.sus;
+        if (done(s, sus)) {
           const path = [];
           for (let j = id; N[j].p >= 0; j = N[j].p) if (N[j].m) path.push(N[j].m);
           return path.reverse();
@@ -1610,18 +1855,21 @@ const GAME_HTML = `<!DOCTYPE html>
         let pouredT = false;
         for (let a = 0; a < s.length; a++) {
           const x = s[a]; if (!x.length) continue;
-          if (x[x.length - 1] === T && su < cap) {
-            let n = 0; while (n < x.length && x[x.length - 1 - n] === T && su + n < cap) n++;
+          const ti = tMap[x[x.length - 1]];
+          if (ti !== undefined && sus[ti] < caps[ti]) {
+            const T = Ts[ti];
+            let n = 0; while (n < x.length && x[x.length - 1 - n] === T && sus[ti] + n < caps[ti]) n++;
             if (n > 0) {
               const ns = s.map(z => z.slice());
               for (let q = 0; q < n; q++) ns[a].pop();
               if (ns[a].length) ns[a][ns[a].length - 1] &= 63;
-              const nsu = su + n;
-              const kk = k(ns, nsu);
+              const nsus = sus.slice();
+              nsus[ti] += n;
+              const kk = k(ns, nsus);
               if (!seen.has(kk)) {
                 seen.add(kk);
-                N.push({ s: ns, su: nsu, p: id, m: [a, 'shape'], g: nd.g + 1 });
-                push([H(ns, nsu) * 3 + nd.g + 1, N.length - 1]);
+                N.push({ s: ns, sus: nsus, p: id, m: [a, 'shape:' + ti], g: nd.g + 1 });
+                push([H(ns, nsus) * 3 + nd.g + 1, N.length - 1]);
               }
               pouredT = true;
               break;
@@ -1644,52 +1892,62 @@ const GAME_HTML = `<!DOCTYPE html>
             const ns = s.map(z => z.slice());
             for (let q = 0; q < n; q++) ns[d].push(ns[a].pop());
             if (ns[a].length) ns[a][ns[a].length - 1] &= 63;
-            const kk = k(ns, su);
+            const kk = k(ns, sus);
             if (seen.has(kk)) continue;
             if (!y.length) usedEmpty = true;
             seen.add(kk);
-            N.push({ s: ns, su, p: id, m: [a, d], g: nd.g + 1 });
-            push([H(ns, su) * 3 + nd.g + 1, N.length - 1]);
+            N.push({ s: ns, sus, p: id, m: [a, d], g: nd.g + 1 });
+            push([H(ns, sus) * 3 + nd.g + 1, N.length - 1]);
           }
         }
       }
       return null;
     }
 
-    function genShape(l, overrideShape) {
-      const p = paramsShape(l, overrideShape);
+    function genShapes(l, targetDefs) {
+      const p = paramsShapes(l, targetDefs);
+      const targetCols = new Set(p.targets.map(t => t.color));
       const otherCols = [];
-      for (let idx = 1; otherCols.length < p.other && idx <= COL.length; idx++) {
-        const c = (p.targetColor + idx * 5) % COL.length;
-        if (c !== p.targetColor && !otherCols.includes(c)) otherCols.push(c);
+      for (let idx = 1; otherCols.length < p.other && idx <= COL.length * 2; idx++) {
+        const c = (p.targets[0].color + idx * 5) % COL.length;
+        if (!targetCols.has(c) && !otherCols.includes(c)) otherCols.push(c);
       }
-      const filledCount = (p.needed / CAP) + p.other;
-      const shInit = { id: p.sh.id, name: p.sh.name, cap: p.cap, color: p.targetColor, units: p.initUnits, initUnits: p.initUnits, other: p.other };
-      const minMoves = Math.min(36, Math.max(5, Math.floor(filledCount * 1.4)));
+      const targetUnitsTotal = p.targets.reduce((a, t) => a + t.needed, 0);
+      const filledCount = (targetUnitsTotal / CAP) + p.other;
+      const shInits = p.targets.map(t => ({
+        id: t.sh.id,
+        name: t.sh.name,
+        isPipe: Boolean(t.sh.isPipe),
+        cap: t.cap,
+        color: t.color,
+        units: t.initUnits,
+        initUnits: t.initUnits
+      }));
+      const minMoves = Math.min(38, Math.max(5, Math.floor(filledCount * 1.45)));
       let best = null;
-      const genDeadline = performance.now() + 260;
+      const genDeadline = performance.now() + 300;
       for (let attempt = 0; attempt < 30; attempt++) {
         if (attempt > 0 && performance.now() > genDeadline) break;
         const r = rng(l * 8923 + 37 + attempt * 131);
         const b = Array.from({ length: filledCount }, () => []);
-        // Place at most 1 T per bottle first (at k=0 or k=1) so T is NEVER stacked [T,T,T]
-        const bottleOrder = Array.from({ length: filledCount }, (_, i) => i);
-        for (let i = bottleOrder.length - 1; i > 0; i--) {
-          const j = Math.floor(r() * (i + 1));
-          const tmp = bottleOrder[i]; bottleOrder[i] = bottleOrder[j]; bottleOrder[j] = tmp;
-        }
-        const tCountPerBottle = new Array(filledCount).fill(0);
-        let placedT = 0;
-        for (const bi of bottleOrder) {
-          if (placedT >= p.needed) break;
-          tCountPerBottle[bi] = 1;
-          placedT++;
-        }
-        // Only if needed > filledCount (small mid-tier levels), add a 2nd separated T
-        for (const bi of bottleOrder) {
-          if (placedT >= p.needed) break;
-          tCountPerBottle[bi]++;
-          placedT++;
+        const perBottleTargets = Array.from({ length: filledCount }, () => []);
+        // Distribute target colors (max 2 per bottle, non-adjacent) across filledCount bottles
+        for (const t of p.targets) {
+          const order = Array.from({ length: filledCount }, (_, i) => i);
+          for (let i = order.length - 1; i > 0; i--) {
+            const j = Math.floor(r() * (i + 1));
+            const tmp = order[i]; order[i] = order[j]; order[j] = tmp;
+          }
+          order.sort((a, bIdx) => perBottleTargets[a].length - perBottleTargets[bIdx].length);
+          let remT = t.needed;
+          for (const bi of order) {
+            if (remT <= 0) break;
+            if (perBottleTargets[bi].length < 2) { perBottleTargets[bi].push(t.color); remT--; }
+          }
+          for (const bi of order) {
+            if (remT <= 0) break;
+            if (perBottleTargets[bi].length < 2) { perBottleTargets[bi].push(t.color); remT--; }
+          }
         }
         const remPool = [];
         for (const oc of otherCols) for (let k = 0; k < CAP; k++) remPool.push(oc);
@@ -1699,18 +1957,16 @@ const GAME_HTML = `<!DOCTYPE html>
         }
         let pi = 0;
         for (let bi = 0; bi < filledCount; bi++) {
-          const tc = tCountPerBottle[bi];
-          if (tc === 1) {
-            // Put single T deep at slot 0 or 1 (slot 0..2 on tutorial l <= 2)
+          const tList = perBottleTargets[bi];
+          if (tList.length === 1) {
             const tPos = l <= 2 ? Math.floor(r() * 3) : Math.floor(r() * 2);
             for (let k = 0; k < CAP; k++) {
-              b[bi].push({ c: k === tPos ? p.targetColor : remPool[pi++], h: false });
+              b[bi].push({ c: k === tPos ? tList[0] : remPool[pi++], h: false });
             }
-          } else if (tc === 2) {
-            // Put 2 T units strictly separated: [T, X, T, Y]
-            b[bi].push({ c: p.targetColor, h: false });
+          } else if (tList.length === 2) {
+            b[bi].push({ c: tList[0], h: false });
             b[bi].push({ c: remPool[pi++], h: false });
-            b[bi].push({ c: p.targetColor, h: false });
+            b[bi].push({ c: tList[1], h: false });
             b[bi].push({ c: remPool[pi++], h: false });
           } else {
             for (let k = 0; k < CAP; k++) b[bi].push({ c: remPool[pi++], h: false });
@@ -1718,7 +1974,7 @@ const GAME_HTML = `<!DOCTYPE html>
         }
         b.push([]); b.push([]);
         if (b.some(x => x.length === CAP && x.every(u => u.c === x[0].c))) continue;
-        if (b.some(x => x.some((u, k) => k > 0 && u.c === p.targetColor && x[k - 1].c === p.targetColor))) continue;
+        if (b.some(x => x.some((u, k) => k > 0 && targetCols.has(u.c) && x[k - 1].c === u.c))) continue;
         if (p.hide > 0) {
           const hMode = l % 3;
           b.forEach(x => x.forEach((u, k) => {
@@ -1727,17 +1983,19 @@ const GAME_HTML = `<!DOCTYPE html>
             u.h = ok && pat;
           }));
         }
-        const path = solveShape(b, shInit, 80000, 180);
+        const path = solveShapes(b, shInits, 80000, 220);
         if (path) {
-          best = { b, cv: b.map(() => false), shape: Object.assign({}, shInit), len: path.length };
-          if (path.length >= minMoves) return { b: best.b, cv: best.cv, shape: best.shape };
+          best = { b, cv: b.map(() => false), shapes: shInits.map(x => Object.assign({}, x)), len: path.length };
+          if (path.length >= minMoves) return { b: best.b, cv: best.cv, shapes: best.shapes };
         }
       }
-      if (best) return { b: best.b, cv: best.cv, shape: best.shape };
+      if (best) return { b: best.b, cv: best.cv, shapes: best.shapes };
       // Guaranteed solvable reverse-pour fallback
       const r = rng(l * 9973 + 53);
       const b = [];
-      for (let i = 0; i < p.needed / CAP; i++) b.push(Array.from({ length: CAP }, () => ({ c: p.targetColor, h: false })));
+      for (const t of p.targets) {
+        for (let i = 0; i < t.needed / CAP; i++) b.push(Array.from({ length: CAP }, () => ({ c: t.color, h: false })));
+      }
       for (const oc of otherCols) b.push(Array.from({ length: CAP }, () => ({ c: oc, h: false })));
       b.push([]); b.push([]);
       const mixMoves = Math.min(80 + l * 3, 500);
@@ -1757,10 +2015,10 @@ const GAME_HTML = `<!DOCTYPE html>
           u.h = ok && pat;
         }));
       }
-      return { b, cv: b.map(() => false), shape: Object.assign({}, shInit) };
+      return { b, cv: b.map(() => false), shapes: shInits.map(x => Object.assign({}, x)) };
     }
 
-    function buildShapeHtml(sh, colorHex) {
+    function buildShapeHtml(sh, colorHex, idx = 0) {
       const span = sh.yMax - sh.yMin;
       const wY = sh.yMin;
       const waveA = 'M0,' + wY + ' Q25,' + (wY - 5) + ' 50,' + wY + ' T100,' + wY + ' T150,' + wY + ' T200,' + wY + ' T250,' + wY + ' T300,' + wY + ' T350,' + wY + ' T400,' + wY + ' V' + (wY + 24) + ' H0 Z';
@@ -1773,16 +2031,17 @@ const GAME_HTML = `<!DOCTYPE html>
       const rxPlugBot = +(rxPlug * 0.84).toFixed(1);
       const rxCap = +(rxPlug * 1.38).toFixed(1);
       const lipRx = +(rxPlug * 1.48).toFixed(1);
+      const sfx = '-' + idx;
       const corkMarkup = ''
-        + '<g id="shape-cork" class="shape-cork">'
-        + '  <path d="M' + (mouthCx - rxPlug).toFixed(1) + ',16.5 L' + (mouthCx - rxPlugBot).toFixed(1) + ',29.5 Q' + mouthCx + ',32.6 ' + (mouthCx + rxPlugBot).toFixed(1) + ',29.5 L' + (mouthCx + rxPlug).toFixed(1) + ',16.5 Z" fill="url(#cork-plug-grad)" stroke="rgba(58,24,5,0.68)" stroke-width="0.7"/>'
+        + '<g id="shape-cork' + sfx + '" class="shape-cork">'
+        + '  <path d="M' + (mouthCx - rxPlug).toFixed(1) + ',16.5 L' + (mouthCx - rxPlugBot).toFixed(1) + ',29.5 Q' + mouthCx + ',32.6 ' + (mouthCx + rxPlugBot).toFixed(1) + ',29.5 L' + (mouthCx + rxPlug).toFixed(1) + ',16.5 Z" fill="url(#cork-plug-grad' + sfx + ')" stroke="rgba(58,24,5,0.68)" stroke-width="0.7"/>'
         + '  <path d="M' + (mouthCx - rxPlug).toFixed(1) + ',16.5 Q' + mouthCx + ',19.2 ' + (mouthCx + rxPlug).toFixed(1) + ',16.5 L' + (mouthCx + rxPlug * 0.94).toFixed(1) + ',19.2 Q' + mouthCx + ',21.4 ' + (mouthCx - rxPlug * 0.94).toFixed(1) + ',19.2 Z" fill="rgba(45,16,3,0.34)"/>'
         + '  <path d="M' + (mouthCx - rxPlug * 0.36).toFixed(1) + ',21 V28 M' + (mouthCx + rxPlug * 0.28).toFixed(1) + ',20.5 V28.5" fill="none" stroke="rgba(75,32,8,0.28)" stroke-width="0.9" stroke-linecap="round"/>'
-        + '  <path d="M' + (mouthCx - rxCap).toFixed(1) + ',9.8 L' + (mouthCx - rxCap).toFixed(1) + ',15.2 Q' + mouthCx + ',18.6 ' + (mouthCx + rxCap).toFixed(1) + ',15.2 L' + (mouthCx + rxCap).toFixed(1) + ',9.8 Z" fill="url(#cork-cap-grad)" stroke="rgba(58,24,5,0.75)" stroke-width="0.75"/>'
-        + '  <ellipse cx="' + mouthCx + '" cy="9.8" rx="' + rxCap + '" ry="3.1" fill="url(#cork-top-grad)" stroke="rgba(255,244,225,0.85)" stroke-width="0.65"/>'
+        + '  <path d="M' + (mouthCx - rxCap).toFixed(1) + ',9.8 L' + (mouthCx - rxCap).toFixed(1) + ',15.2 Q' + mouthCx + ',18.6 ' + (mouthCx + rxCap).toFixed(1) + ',15.2 L' + (mouthCx + rxCap).toFixed(1) + ',9.8 Z" fill="url(#cork-cap-grad' + sfx + ')" stroke="rgba(58,24,5,0.75)" stroke-width="0.75"/>'
+        + '  <ellipse cx="' + mouthCx + '" cy="9.8" rx="' + rxCap + '" ry="3.1" fill="url(#cork-top-grad' + sfx + ')" stroke="rgba(255,244,225,0.85)" stroke-width="0.65"/>'
         + '</g>';
       const fishMarkup = sh.isPipe
-        ? '<g id="shape-fish" style="transform:translate(148px,168px)"><g class="fish-bob">'
+        ? '<g id="shape-fish' + sfx + '" class="shape-fish" style="transform:translate(148px,168px)"><g class="fish-bob">'
           + '<path d="M-8,0 L-13,-4.5 L-11.5,0 L-13,4.5 Z" fill="#ff6b00"/>'
           + '<ellipse cx="0" cy="0" rx="8.5" ry="5.5" fill="#ff851b" stroke="#fff4e0" stroke-width="0.9"/>'
           + '<path d="M-2.5,-5.2 Q-0.5,0 -2.5,5.2" fill="none" stroke="#ffffff" stroke-width="2.1"/>'
@@ -1792,43 +2051,43 @@ const GAME_HTML = `<!DOCTYPE html>
           + '</g></g>'
         : '';
       const sharedDefs = ''
-        + '    <linearGradient id="shape-glass-bg" x1="0" y1="0" x2="1" y2="0.2">'
+        + '    <linearGradient id="shape-glass-bg' + sfx + '" x1="0" y1="0" x2="1" y2="0.2">'
         + '      <stop offset="0%" stop-color="rgba(255,255,255,0.18)"/>'
         + '      <stop offset="35%" stop-color="rgba(255,255,255,0.04)"/>'
         + '      <stop offset="75%" stop-color="rgba(8,6,28,0.22)"/>'
         + '      <stop offset="100%" stop-color="rgba(255,255,255,0.12)"/>'
         + '    </linearGradient>'
-        + '    <linearGradient id="shape-liq-3d" x1="0" y1="0" x2="1" y2="0">'
+        + '    <linearGradient id="shape-liq-3d' + sfx + '" x1="0" y1="0" x2="1" y2="0">'
         + '      <stop offset="0%" stop-color="rgba(255,255,255,0.28)"/>'
         + '      <stop offset="22%" stop-color="rgba(255,255,255,0.05)"/>'
         + '      <stop offset="68%" stop-color="rgba(0,0,0,0.02)"/>'
         + '      <stop offset="100%" stop-color="rgba(0,0,0,0.28)"/>'
         + '    </linearGradient>'
-        + '    <linearGradient id="shape-glass-sheen" x1="0" y1="0" x2="1" y2="1">'
+        + '    <linearGradient id="shape-glass-sheen' + sfx + '" x1="0" y1="0" x2="1" y2="1">'
         + '      <stop offset="0%" stop-color="rgba(255,255,255,0.20)"/>'
         + '      <stop offset="30%" stop-color="rgba(255,255,255,0.02)"/>'
         + '      <stop offset="70%" stop-color="rgba(255,255,255,0)"/>'
         + '      <stop offset="100%" stop-color="rgba(255,255,255,0.10)"/>'
         + '    </linearGradient>'
-        + '    <linearGradient id="shape-spec-grad" x1="0" y1="0" x2="0" y2="1">'
+        + '    <linearGradient id="shape-spec-grad' + sfx + '" x1="0" y1="0" x2="0" y2="1">'
         + '      <stop offset="0%" stop-color="rgba(255,255,255,0.68)"/>'
         + '      <stop offset="100%" stop-color="rgba(255,255,255,0.08)"/>'
         + '    </linearGradient>'
-        + '    <linearGradient id="cork-plug-grad" x1="0" y1="0" x2="1" y2="0">'
+        + '    <linearGradient id="cork-plug-grad' + sfx + '" x1="0" y1="0" x2="1" y2="0">'
         + '      <stop offset="0%" stop-color="#6e3410"/>'
         + '      <stop offset="22%" stop-color="#b97d42"/>'
         + '      <stop offset="46%" stop-color="#efd0a5"/>'
         + '      <stop offset="76%" stop-color="#bd7f42"/>'
         + '      <stop offset="100%" stop-color="#612c0b"/>'
         + '    </linearGradient>'
-        + '    <linearGradient id="cork-cap-grad" x1="0" y1="0" x2="1" y2="0">'
+        + '    <linearGradient id="cork-cap-grad' + sfx + '" x1="0" y1="0" x2="1" y2="0">'
         + '      <stop offset="0%" stop-color="#86491b"/>'
         + '      <stop offset="24%" stop-color="#d29c64"/>'
         + '      <stop offset="46%" stop-color="#f7deb9"/>'
         + '      <stop offset="76%" stop-color="#c28549"/>'
         + '      <stop offset="100%" stop-color="#763c12"/>'
         + '    </linearGradient>'
-        + '    <linearGradient id="cork-top-grad" x1="0" y1="0" x2="0.4" y2="1">'
+        + '    <linearGradient id="cork-top-grad' + sfx + '" x1="0" y1="0" x2="0.4" y2="1">'
         + '      <stop offset="0%" stop-color="#f7e2c4"/>'
         + '      <stop offset="100%" stop-color="#cfa06b"/>'
         + '    </linearGradient>';
@@ -1841,9 +2100,9 @@ const GAME_HTML = `<!DOCTYPE html>
           + '<circle class="shape-bub" cx="95" cy="' + (wY + 130) + '" r="3.8" fill="rgba(255,255,255,0.35)" style="animation-delay:2.1s"/>'
           + '<circle class="shape-bub" cx="144" cy="' + (wY + 150) + '" r="2.6" fill="rgba(255,255,255,0.48)" style="animation-delay:0.6s"/>';
       const liqContent = ''
-        + '    <path id="shape-pipe-flow" d="' + flowPath + '" fill="none" stroke="' + colorHex + '" stroke-width="' + flowWidth + '" stroke-linecap="round" stroke-linejoin="round" style="opacity:0"/>'
-        + '    <path id="shape-pipe-flow-core" d="' + flowPath + '" fill="none" stroke="rgba(255,255,255,0.48)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="opacity:0"/>'
-        + '    <g id="shape-liq-wrap">'
+        + '    <path id="shape-pipe-flow' + sfx + '" d="' + flowPath + '" fill="none" stroke="' + colorHex + '" stroke-width="' + flowWidth + '" stroke-linecap="round" stroke-linejoin="round" style="opacity:0"/>'
+        + '    <path id="shape-pipe-flow-core' + sfx + '" d="' + flowPath + '" fill="none" stroke="rgba(255,255,255,0.48)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="opacity:0"/>'
+        + '    <g id="shape-liq-wrap' + sfx + '" class="shape-liq-wrap">'
         + '      <path class="shape-wave-b" d="' + waveB + '" fill="' + colorHex + '" opacity="0.55"/>'
         + '      <path class="shape-wave-b" d="' + waveB + '" fill="rgba(255,255,255,0.22)"/>'
         + '      <rect x="0" y="' + (wY + 5) + '" width="200" height="' + (span + 34) + '" fill="' + colorHex + '"/>'
@@ -1852,7 +2111,7 @@ const GAME_HTML = `<!DOCTYPE html>
         + bubs
         + '    </g>'
         + fishMarkup
-        + '    <rect x="0" y="0" width="200" height="210" fill="url(#shape-liq-3d)" pointer-events="none"/>';
+        + '    <rect x="0" y="0" width="200" height="210" fill="url(#shape-liq-3d' + sfx + ')" pointer-events="none"/>';
 
       if (sh.isPipe) {
         const fOut = 'M26,15 H58 Q62,15 62,20 Q62,25 56,26 L56,74 Q56,82 42,82 Q28,82 28,74 L28,26 Q22,25 22,20 Q22,15 26,15 Z';
@@ -1862,16 +2121,16 @@ const GAME_HTML = `<!DOCTYPE html>
         const brInB = sh.branchD ? '      <path d="' + sh.branchD + '" fill="none" stroke="#000" stroke-width="12.6" stroke-linecap="round" stroke-linejoin="round"/>' : '';
         const brShine = sh.branchD ? '    <path d="' + sh.branchD + '" fill="none" stroke="rgba(255,255,255,0.24)" stroke-width="2.2" stroke-linecap="round" transform="translate(0,-3)" pointer-events="none"/>' : '';
         return ''
-          + '<svg id="shape-svg" viewBox="0 0 200 210" aria-hidden="true">'
+          + '<svg id="shape-svg' + sfx + '" viewBox="0 0 200 210" aria-hidden="true">'
           + '  <defs>'
-          + '    <mask id="pipe-liq-mask">'
+          + '    <mask id="pipe-liq-mask' + sfx + '">'
           + '      <rect x="0" y="0" width="200" height="210" fill="#000"/>'
           + '      <path d="' + fIn + '" fill="#fff"/>'
           + '      <path d="' + sh.tubeD + '" fill="none" stroke="#fff" stroke-width="12.6" stroke-linecap="round" stroke-linejoin="round"/>'
           + brInW
           + '      <circle cx="148" cy="158" r="28.5" fill="#fff"/>'
           + '    </mask>'
-          + '    <mask id="pipe-wall-mask">'
+          + '    <mask id="pipe-wall-mask' + sfx + '">'
           + '      <rect x="0" y="0" width="200" height="210" fill="#000"/>'
           + '      <path d="' + fOut + '" fill="#fff"/>'
           + '      <path d="' + sh.tubeD + '" fill="none" stroke="#fff" stroke-width="19" stroke-linecap="round" stroke-linejoin="round"/>'
@@ -1884,15 +2143,15 @@ const GAME_HTML = `<!DOCTYPE html>
           + '    </mask>'
           + sharedDefs
           + '  </defs>'
-          + '  <g mask="url(#pipe-liq-mask)">'
-          + '    <rect x="0" y="0" width="200" height="210" fill="url(#shape-glass-bg)"/>'
+          + '  <g mask="url(#pipe-liq-mask' + sfx + ')">'
+          + '    <rect x="0" y="0" width="200" height="210" fill="url(#shape-glass-bg' + sfx + ')"/>'
           + liqContent
-          + '    <rect x="0" y="0" width="200" height="210" fill="url(#shape-glass-sheen)" pointer-events="none"/>'
+          + '    <rect x="0" y="0" width="200" height="210" fill="url(#shape-glass-sheen' + sfx + ')" pointer-events="none"/>'
           + '    <path d="' + sh.tubeD + '" fill="none" stroke="rgba(255,255,255,0.28)" stroke-width="2.4" stroke-linecap="round" transform="translate(0,-3)" pointer-events="none"/>'
           + brShine
           + '  </g>'
-          + '  <rect x="0" y="0" width="200" height="210" fill="rgba(225,220,255,0.85)" mask="url(#pipe-wall-mask)" pointer-events="none"/>'
-          + '  <path d="M32.5,30 H37 V71 Q34.5,73 32.5,68 Z M123,156 C123,140 131,131 141,129 C134,137 130,146 130,158 C130,167 133,174 139,179 C128,175 123,166 123,156 Z" fill="url(#shape-spec-grad)" pointer-events="none"/>'
+          + '  <rect x="0" y="0" width="200" height="210" fill="rgba(225,220,255,0.85)" mask="url(#pipe-wall-mask' + sfx + ')" pointer-events="none"/>'
+          + '  <path d="M32.5,30 H37 V71 Q34.5,73 32.5,68 Z M123,156 C123,140 131,131 141,129 C134,137 130,146 130,158 C130,167 133,174 139,179 C128,175 123,166 123,156 Z" fill="url(#shape-spec-grad' + sfx + ')" pointer-events="none"/>'
           + '  <path d="M167,138 C173,145 174,158 167,172 C170,163 170,150 167,138 Z" fill="rgba(255,255,255,0.20)" pointer-events="none"/>'
           + '  <ellipse cx="' + mouthCx + '" cy="18" rx="' + lipRx + '" ry="3.2" fill="rgba(255,255,255,0.20)" stroke="rgba(240,235,255,0.82)" stroke-width="1.4" pointer-events="none"/>'
           + corkMarkup
@@ -1901,19 +2160,19 @@ const GAME_HTML = `<!DOCTYPE html>
 
       const facets = sh.facetD ? '<path d="' + sh.facetD + '" fill="none" stroke="rgba(255,255,255,0.16)" stroke-width="1.3" stroke-linecap="round"/>' : '';
       return ''
-        + '<svg id="shape-svg" viewBox="0 0 200 210" aria-hidden="true">'
+        + '<svg id="shape-svg' + sfx + '" viewBox="0 0 200 210" aria-hidden="true">'
         + '  <defs>'
-        + '    <clipPath id="shape-clip"><path d="' + sh.clipD + '"/></clipPath>'
+        + '    <clipPath id="shape-clip' + sfx + '"><path d="' + sh.clipD + '"/></clipPath>'
         + sharedDefs
         + '  </defs>'
-        + '  <path d="' + sh.d + '" fill="url(#shape-glass-bg)"/>'
-        + '  <g clip-path="url(#shape-clip)">'
+        + '  <path d="' + sh.d + '" fill="url(#shape-glass-bg' + sfx + ')"/>'
+        + '  <g clip-path="url(#shape-clip' + sfx + ')">'
         + liqContent
         + '  </g>'
         + facets
         + '  <path d="' + sh.clipD + '" fill="none" stroke="rgba(255,255,255,0.24)" stroke-width="1.4" pointer-events="none"/>'
-        + '  <path d="' + sh.d + '" fill="url(#shape-glass-sheen)" stroke="rgba(225,220,255,0.84)" stroke-width="3.2" stroke-linejoin="round" pointer-events="none"/>'
-        + '  <path d="' + sh.specD + '" fill="url(#shape-spec-grad)" pointer-events="none"/>'
+        + '  <path d="' + sh.d + '" fill="url(#shape-glass-sheen' + sfx + ')" stroke="rgba(225,220,255,0.84)" stroke-width="3.2" stroke-linejoin="round" pointer-events="none"/>'
+        + '  <path d="' + sh.specD + '" fill="url(#shape-spec-grad' + sfx + ')" pointer-events="none"/>'
         + '  <path d="' + sh.specR + '" fill="rgba(255,255,255,0.18)" pointer-events="none"/>'
         + '  <ellipse cx="' + mouthCx + '" cy="18" rx="' + lipRx + '" ry="3.4" fill="rgba(255,255,255,0.20)" stroke="rgba(240,235,255,0.82)" stroke-width="1.5" pointer-events="none"/>'
         + corkMarkup
@@ -1923,14 +2182,16 @@ const GAME_HTML = `<!DOCTYPE html>
     function build() {
       hist = []; undos = 5; adds = 2; sel = null; busy = false;
       const lv = curLv();
-      const targetShape = resolveShapeForLevel(lv, mode);
-      if (targetShape) {
-        const g = genShape(lv, targetShape);
-        B = g.b; cov = g.cv; shapeState = g.shape;
+      const targetDefs = resolveShapesForLevel(lv, mode);
+      if (targetDefs.length) {
+        const g = genShapes(lv, targetDefs);
+        B = g.b; cov = g.cv; shapes = g.shapes;
+        const totalNeed = shapes.reduce((s, sh) => s + Math.max(1, sh.cap - sh.initUnits), 0);
+        const title = shapes.length > 1 ? 'Fill Both Shapes' : ('Fill ' + shapes[0].name);
         $('lv').textContent = 'Level ' + lv;
-        $('df').textContent = shapeState.name + (B.length >= 25 ? ' (25 Bottles)' : '');
+        $('df').textContent = title + ' (0/' + totalNeed + ')' + (B.length >= 25 ? ' • 25 Bottles' : '');
       } else {
-        shapeState = null;
+        shapes = [];
         const g = gen(lv);
         B = g.b; cov = g.cv;
         $('lv').textContent = 'Level ' + lv;
@@ -1953,19 +2214,31 @@ const GAME_HTML = `<!DOCTYPE html>
       const ah = Math.max(260, bd.clientHeight - 24);
       const isLandscape = aw >= 720 && aw >= ah * 1.18;
       const root = document.documentElement.style;
-      function createShapeEl(shDef) {
+      const hasShapes = shapes.length > 0;
+      const isMultiShape = shapes.length > 1;
+      function createShapeEl(shState, idx) {
+        const shDef = findShape(shState.id);
         const shWrap = document.createElement('div');
-        shWrap.id = 'shape-wrap';
+        shWrap.id = 'shape-wrap-' + idx;
         shWrap.className = 'shape-wrap';
         shWrap.tabIndex = 0;
         shWrap.setAttribute('role', 'button');
-        shWrap.setAttribute('aria-label', shapeState.name + ' target container');
-        shWrap.innerHTML = buildShapeHtml(shDef, COL[shapeState.color]);
-        shWrap.onclick = tapShape;
-        shWrap.onkeydown = ev => { if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); tapShape() } };
+        shWrap.setAttribute('aria-label', shState.name + ' target container ' + (idx + 1));
+        shWrap.style.setProperty('--scol', COL[shState.color]);
+        shWrap.innerHTML = buildShapeHtml(shDef, COL[shState.color], idx);
+        shWrap.onclick = () => tapShape(idx);
+        shWrap.onkeydown = ev => { if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); tapShape(idx) } };
         return shWrap;
       }
-      if (shapeState && isLandscape) {
+      function buildShapesNode(pairGap) {
+        if (!isMultiShape) return createShapeEl(shapes[0], 0);
+        const pair = document.createElement('div');
+        pair.className = 'shape-pair';
+        pair.style.gap = pairGap + 'px';
+        shapes.forEach((shState, idx) => pair.appendChild(createShapeEl(shState, idx)));
+        return pair;
+      }
+      if (hasShapes && isLandscape) {
         bd.classList.remove('board-dense');
         bd.classList.add('board-shape');
         const leftN = Math.floor(n / 2);
@@ -1975,13 +2248,17 @@ const GAME_HTML = `<!DOCTYPE html>
         const rightCols = wingRows === 1 ? Math.max(1, rightN) : Math.ceil(rightN / 2);
         const totalSideCols = leftCols + rightCols;
         const wingGapCount = Math.max(0, leftCols - 1) + Math.max(0, rightCols - 1);
-        const shapeMaxW = Math.min(276, aw * 0.25);
-        const shapeSize = Math.min(shapeMaxW, Math.max(150, ah * 0.56));
+        const pairGap = isMultiShape ? Math.max(14, Math.min(24, Math.round(aw * 0.018))) : 0;
+        const shapeMaxW = isMultiShape ? Math.min(198, aw * 0.175) : Math.min(276, aw * 0.25);
+        const shapeSize = isMultiShape
+          ? Math.min(shapeMaxW, Math.max(116, ah * 0.48))
+          : Math.min(shapeMaxW, Math.max(150, ah * 0.56));
         const shapeH = shapeSize * 1.05;
+        const centerW = isMultiShape ? (shapeSize * 2 + pairGap) : shapeSize;
         const minRowGap = wingRows > 1 ? 26 : 0;
         const shapeClear = Math.max(48, Math.min(92, aw * 0.068));
         const gapRatio = totalSideCols >= 11 ? (aw < 940 ? 0.36 : 0.48) : 0.60;
-        const bwByW = (aw - 16 - shapeSize - shapeClear) / (totalSideCols + wingGapCount * gapRatio);
+        const bwByW = (aw - 16 - centerW - shapeClear) / (totalSideCols + wingGapCount * gapRatio);
         const bhMax = (ah - (wingRows - 1) * minRowGap) / wingRows;
         let bw = Math.min(54, bwByW, bhMax / 2.45);
         let bh = Math.min(bhMax, bw * 2.52, wingRows === 1 ? 148 : 132);
@@ -1989,7 +2266,7 @@ const GAME_HTML = `<!DOCTYPE html>
           bh = Math.max(46, bhMax);
           bw = Math.min(bw, bh / 2.35);
         }
-        const sideFree = Math.max(24, aw - 16 - shapeSize - totalSideCols * bw);
+        const sideFree = Math.max(24, aw - 16 - centerW - totalSideCols * bw);
         const wingSpan = Math.max(wingGapCount, 1);
         const mgap = Math.min(52, Math.max(20, Math.floor(sideFree * (wingGapCount ? 0.14 : 0.42))));
         const cgap = wingGapCount ? Math.min(36, Math.max(11, ((sideFree - 2 * mgap) / wingSpan) * 0.90)) : 20;
@@ -2002,7 +2279,6 @@ const GAME_HTML = `<!DOCTYPE html>
         root.setProperty('--rgap', rgap + 'px');
         root.setProperty('--sw', shapeSize.toFixed(1) + 'px');
         root.setProperty('--sh', shapeH.toFixed(1) + 'px');
-        root.setProperty('--scol', COL[shapeState.color]);
 
         function buildWing(startIdx, count, cols) {
           const wing = document.createElement('div');
@@ -2015,16 +2291,15 @@ const GAME_HTML = `<!DOCTYPE html>
           }
           return wing;
         }
-        const shDef = findShape(shapeState.id);
         const wrap = document.createElement('div'); wrap.className = 'shape-landscape';
         if (leftN > 0) wrap.appendChild(buildWing(0, leftN, leftCols));
-        wrap.appendChild(createShapeEl(shDef));
+        wrap.appendChild(buildShapesNode(pairGap));
         if (rightN > 0) wrap.appendChild(buildWing(leftN, rightN, rightCols));
         bd.appendChild(wrap);
-      } else if (shapeState) {
+      } else if (hasShapes) {
         bd.classList.remove('board-dense');
         bd.classList.add('board-shape');
-        const sidePairs = (n >= 16 && aw >= 330) ? 2 : (n >= 4 ? 1 : 0);
+        const sidePairs = isMultiShape ? 0 : ((n >= 16 && aw >= 330) ? 2 : (n >= 4 ? 1 : 0));
         const sideCount = sidePairs * 2;
         const rem = n - sideCount;
         const topN = Math.ceil(rem / 2);
@@ -2037,10 +2312,15 @@ const GAME_HTML = `<!DOCTYPE html>
         const maxPerRow = Math.max(perTop, perBot, 3);
         const rowGapRatio = maxPerRow >= 6 ? 0.56 : 0.65;
         const bwByRow = (aw - 10) / (maxPerRow + rowGapRatio * (maxPerRow - 1));
-        const shapeMaxW = totalBRows >= 3
-          ? Math.min(sidePairs === 2 ? 156 : 176, aw * (sidePairs === 2 ? 0.42 : 0.48))
-          : Math.min(sidePairs === 2 ? 176 : 206, aw * (sidePairs === 2 ? 0.45 : 0.54));
-        const shapeSize = Math.min(shapeMaxW, Math.max(totalBRows >= 3 ? 118 : 142, ah * (totalBRows >= 3 ? 0.30 : 0.41)));
+        const pairGap = isMultiShape ? Math.max(12, Math.min(24, Math.round(aw * 0.045))) : 0;
+        const shapeMaxW = isMultiShape
+          ? Math.min(totalBRows >= 3 ? 148 : 168, (aw - 24 - pairGap) * 0.5)
+          : (totalBRows >= 3
+            ? Math.min(sidePairs === 2 ? 156 : 176, aw * (sidePairs === 2 ? 0.42 : 0.48))
+            : Math.min(sidePairs === 2 ? 176 : 206, aw * (sidePairs === 2 ? 0.45 : 0.54)));
+        const shapeSize = isMultiShape
+          ? Math.min(shapeMaxW, Math.max(totalBRows >= 3 ? 102 : 114, ah * (totalBRows >= 3 ? 0.25 : 0.30)))
+          : Math.min(shapeMaxW, Math.max(totalBRows >= 3 ? 118 : 142, ah * (totalBRows >= 3 ? 0.30 : 0.41)));
         const shapeH = shapeSize * 1.05;
         const bwByMid = sidePairs
           ? (aw - 12 - shapeSize - (sidePairs === 2 ? 32 : 34)) / (sidePairs === 2 ? (4 + 2 * 0.48) : 2)
@@ -2071,7 +2351,6 @@ const GAME_HTML = `<!DOCTYPE html>
         root.setProperty('--rgap', rgap + 'px');
         root.setProperty('--sw', shapeSize.toFixed(1) + 'px');
         root.setProperty('--sh', shapeH.toFixed(1) + 'px');
-        root.setProperty('--scol', COL[shapeState.color]);
 
         let row;
         for (let i = 0; i < topN; i++) {
@@ -2088,8 +2367,7 @@ const GAME_HTML = `<!DOCTYPE html>
           }
           midRow.appendChild(leftSide);
         }
-        const shDef = findShape(shapeState.id);
-        midRow.appendChild(createShapeEl(shDef));
+        midRow.appendChild(buildShapesNode(pairGap));
         if (sidePairs) {
           const rightSide = document.createElement('div'); rightSide.className = 'shape-side';
           for (let k = 0; k < sidePairs; k++) {
@@ -2158,33 +2436,42 @@ const GAME_HTML = `<!DOCTYPE html>
       $('unc').textContent = undos; $('abc').textContent = adds;
       $('un').parentNode.classList.toggle('off', !hist.length || !undos);
       $('ab').parentNode.classList.toggle('off', !adds || B.length >= 25);
-      if (shapeState) {
-        const shDef = findShape(shapeState.id);
-        const frac = Math.min(1, shapeState.units / shapeState.cap);
-        const offsetY = (1 - frac) * (shDef.yMax - shDef.yMin);
-        const liqEl = $('shape-liq-wrap');
-        if (liqEl) liqEl.style.transform = 'translateY(' + offsetY.toFixed(2) + 'px)';
-        const fishEl = $('shape-fish');
-        if (fishEl) {
-          const liqTopY = shDef.yMin + offsetY;
-          const fx = 148;
-          const fy = Math.max(145, Math.min(171, liqTopY + 13));
-          fishEl.style.transform = 'translate(' + fx + 'px,' + fy.toFixed(1) + 'px)';
-        }
-        const shWrap = $('shape-wrap');
-        if (shWrap) {
-          if (skipBottleIdx !== -2) {
-            shWrap.classList.toggle('done', shapeState.units >= shapeState.cap);
+      const skipShapeIdx = skipBottleIdx <= -10 ? (-10 - skipBottleIdx) : -1;
+      if (shapes.length) {
+        let totalDone = 0, totalNeed = 0;
+        shapes.forEach((shState, si) => {
+          const shDef = findShape(shState.id);
+          const frac = Math.min(1, shState.units / shState.cap);
+          const offsetY = (1 - frac) * (shDef.yMax - shDef.yMin);
+          const liqEl = $('shape-liq-wrap-' + si);
+          if (liqEl) liqEl.style.transform = 'translateY(' + offsetY.toFixed(2) + 'px)';
+          const fishEl = $('shape-fish-' + si);
+          if (fishEl) {
+            const liqTopY = shDef.yMin + offsetY;
+            const fx = 148;
+            const fy = Math.max(145, Math.min(171, liqTopY + 13));
+            fishEl.style.transform = 'translate(' + fx + 'px,' + fy.toFixed(1) + 'px)';
           }
-          shWrap.classList.toggle('ready', skipBottleIdx !== -2 && sel !== null && canPourToShape(sel));
-        }
-        const shapeDone = Math.max(0, shapeState.units - shapeState.initUnits);
-        const shapeNeed = Math.max(1, shapeState.cap - shapeState.initUnits);
-        const totalGoal = shapeNeed + shapeState.other * CAP;
-        const doneOtherUnits = B.filter(b => full(b) && b[0].c !== shapeState.color).length * CAP;
-        const pct = Math.min(100, Math.round(((shapeDone + doneOtherUnits) / totalGoal) * 100));
+          const shDone = Math.max(0, shState.units - shState.initUnits);
+          const shNeed = Math.max(1, shState.cap - shState.initUnits);
+          totalDone += shDone;
+          totalNeed += shNeed;
+          const isFull = shState.units >= shState.cap;
+          const shWrap = $('shape-wrap-' + si);
+          if (shWrap) {
+            if (si !== skipShapeIdx) {
+              shWrap.classList.toggle('done', isFull);
+            }
+            shWrap.classList.toggle('ready', si !== skipShapeIdx && sel !== null && canPourToShapeIdx(sel, si));
+          }
+        });
+        const allDone = shapes.every(sh => sh.units >= sh.cap);
+        let pct = Math.min(100, Math.round((totalDone / Math.max(1, totalNeed)) * 100));
+        if (!allDone && pct >= 100) pct = 99;
         if ($('lvl-prog-fill')) $('lvl-prog-fill').style.width = pct + '%';
         if ($('lvl-prog-txt')) $('lvl-prog-txt').textContent = pct + '%';
+        const title = shapes.length > 1 ? 'Fill Both Shapes' : ('Fill ' + shapes[0].name);
+        if ($('df')) $('df').textContent = title + ' (' + totalDone + '/' + Math.max(1, totalNeed) + ')' + (B.length >= 25 ? ' • 25 Bottles' : '');
       } else {
         const totalColors = Math.max(1, params(curLv()).colors);
         const doneColors = B.filter(full).length;
@@ -2194,7 +2481,11 @@ const GAME_HTML = `<!DOCTYPE html>
       }
     }
     const canPour = (a, b) => a !== b && B[a].length && B[b].length < CAP && !cov[a] && !cov[b] && (!B[b].length || B[b][B[b].length - 1].c === B[a][B[a].length - 1].c);
-    const canPourToShape = a => Boolean(shapeState) && a !== null && a >= 0 && B[a] && B[a].length && !cov[a] && B[a][B[a].length - 1].c === shapeState.color && shapeState.units < shapeState.cap;
+    const canPourToShapeIdx = (a, si) => {
+      const sh = shapes[si];
+      return Boolean(sh) && a !== null && a >= 0 && B[a] && B[a].length && !cov[a] && B[a][B[a].length - 1].c === sh.color && sh.units < sh.cap;
+    };
+    const canPourToShape = a => shapes.some((_, si) => canPourToShapeIdx(a, si));
     function unlockCheck() {
       let o = false;
       cov.forEach((q, i) => {
@@ -2219,6 +2510,7 @@ const GAME_HTML = `<!DOCTYPE html>
 
     function tap(i) {
       if (busy) return;
+      startBgm();
       if (cov[i]) { els[i].classList.remove('shake'); void els[i].offsetWidth; els[i].classList.add('shake'); sfxTap(240); toast('Locked. Complete the glowing bottle next to it to open.'); return }
       if (sel === null) { if (B[i].length) { sel = i; sfxTap(640); sync() } return }
       if (sel === i) { sel = null; sfxTap(480); sync(); return }
@@ -2227,33 +2519,38 @@ const GAME_HTML = `<!DOCTYPE html>
       if (B[i].length && !cov[i]) { sel = i; sync() }
     }
 
-    function tapShape() {
-      if (busy || !shapeState) return;
+    function tapShape(si = 0) {
+      const shState = shapes[si];
+      if (busy || !shState) return;
+      startBgm();
       if (sel === null) {
         sfxTap(520);
-        toast('Select a bottle with the matching color to fill the ' + shapeState.name + '!');
+        toast('Select a bottle with the matching color to fill the ' + shState.name + '!');
         return;
       }
-      if (canPourToShape(sel)) {
-        pourToShape(sel);
+      if (canPourToShapeIdx(sel, si)) {
+        pourToShape(sel, si);
         return;
       }
-      const shWrap = $('shape-wrap');
+      const shWrap = $('shape-wrap-' + si);
       if (shWrap) { shWrap.classList.remove('shake'); void shWrap.offsetWidth; shWrap.classList.add('shake'); }
       sfxTap(240);
-      toast('Only the matching color can fill this ' + shapeState.name + '!');
+      if (shState.units >= shState.cap) toast('This ' + shState.name + ' is already full! Fill the other shape.');
+      else toast('Only the matching color can fill this ' + shState.name + '!');
     }
 
-    async function pourToShape(a) {
+    async function pourToShape(a, si = 0) {
+      const shState = shapes[si];
+      if (!shState) return;
       busy = true;
-      hist.push({ B: JSON.parse(JSON.stringify(B)), cov: cov.slice(), shapeUnits: shapeState.units });
-      const shDef = findShape(shapeState.id);
-      const ea = els[a], shEl = $('shape-wrap'), ra = ea.getBoundingClientRect(), rb = shEl.getBoundingClientRect();
+      hist.push({ B: JSON.parse(JSON.stringify(B)), cov: cov.slice(), shapeUnits: shapes.map(s => s.units) });
+      const shDef = findShape(shState.id);
+      const ea = els[a], shEl = $('shape-wrap-' + si), ra = ea.getBoundingClientRect(), rb = shEl.getBoundingClientRect();
       const ah = ra.height, aw = ra.width;
       const bcx = rb.left + rb.width * (shDef.mouthX || 0.5);
-      const side = bcx - .5 * ah > 8 ? -1 : 1;
-      const c = shapeState.color, color = COL[c];
-      let n = 0; while (n < B[a].length && B[a][B[a].length - 1 - n].c === c && !B[a][B[a].length - 1 - n].h && shapeState.units + n < shapeState.cap) n++;
+      const side = (bcx - ah - aw * 0.35 < 8) ? 1 : (bcx + ah + aw * 0.35 > window.innerWidth - 8 ? -1 : (bcx >= window.innerWidth * 0.5 ? -1 : 1));
+      const c = shState.color, color = COL[c];
+      let n = 0; while (n < B[a].length && B[a][B[a].length - 1 - n].c === c && !B[a][B[a].length - 1 - n].h && shState.units + n < shState.cap) n++;
       const acx = ra.left + ra.width / 2, acy = ra.top + ra.height / 2 + 16, R = t => t * Math.PI / 180;
       const mouthY = rb.top + rb.height * (shDef.mouthY || 0.085);
       const myf = t => mouthY - 12 - ah * Math.cos(R(t)) - (aw / 2) * Math.sin(R(t)), py = t => myf(t) + .5 * ah * Math.cos(R(t)) - acy;
@@ -2264,10 +2561,10 @@ const GAME_HTML = `<!DOCTYPE html>
       const st = $('stream'); st.getAnimations().forEach(x => x.cancel());
       const surf = shDef.isPipe
         ? (mouthY + Math.max(16, rb.height * 0.14))
-        : (rb.top + rb.height * (0.89 - ((shapeState.units + n / 2) / shapeState.cap) * 0.70));
+        : (rb.top + rb.height * (0.89 - ((shState.units + n / 2) / shState.cap) * 0.70));
       const m0 = myf(52), m1 = myf(88);
       st.style.cssText = 'background:' + color + ';left:' + (bcx - 3.5) + 'px;top:' + m0 + 'px;height:' + Math.max(8, surf - m0) + 'px';
-      const flowEl = $('shape-pipe-flow'), coreEl = $('shape-pipe-flow-core');
+      const flowEl = $('shape-pipe-flow-' + si), coreEl = $('shape-pipe-flow-core-' + si);
       const flowLen = (flowEl && flowEl.getTotalLength) ? flowEl.getTotalLength() : 240;
       if (flowEl) { flowEl.getAnimations().forEach(x => x.cancel()); flowEl.style.strokeDasharray = flowLen; flowEl.style.strokeDashoffset = flowLen; flowEl.style.opacity = '0'; }
       if (coreEl) { coreEl.getAnimations().forEach(x => x.cancel()); coreEl.style.strokeDasharray = flowLen; coreEl.style.strokeDashoffset = flowLen; coreEl.style.opacity = '0'; }
@@ -2282,11 +2579,11 @@ const GAME_HTML = `<!DOCTYPE html>
       if (flowEl) { flowEl.style.opacity = '0.96'; flowEl.animate([{ strokeDashoffset: flowLen }, { strokeDashoffset: 0 }], { duration: flowInDur, easing: 'ease-in', fill: 'forwards' }); }
       if (coreEl) { coreEl.style.opacity = '0.55'; coreEl.animate([{ strokeDashoffset: flowLen }, { strokeDashoffset: 0 }], { duration: flowInDur, easing: 'ease-in', fill: 'forwards' }); }
 
-      sfxPour((pd * .8) / 1000, Math.min(4, shapeState.units));
+      sfxPour((pd * .8) / 1000, Math.min(4, shState.units));
       await sleep(120);
       for (let k = 0; k < n; k++) B[a].pop();
-      shapeState.units += n;
-      sync(-2);
+      shState.units += n;
+      sync(-10 - si);
       await sleep(pd * .8 - 100);
       st.animate([{ clipPath: 'inset(0)' }, { clipPath: 'inset(100% 0 0 0)' }], { duration: 200, easing: 'ease-out', fill: 'forwards' });
       if (flowEl) flowEl.animate([{ strokeDashoffset: 0 }, { strokeDashoffset: -flowLen }], { duration: 240, easing: 'ease-out', fill: 'forwards' });
@@ -2297,7 +2594,7 @@ const GAME_HTML = `<!DOCTYPE html>
       if (flowEl) { flowEl.getAnimations().forEach(x => x.cancel()); flowEl.style.opacity = '0'; }
       if (coreEl) { coreEl.getAnimations().forEach(x => x.cancel()); coreEl.style.opacity = '0'; }
 
-      const shapeJustFilled = shapeState.units >= shapeState.cap;
+      const shapeJustFilled = shState.units >= shState.cap;
       if (shapeJustFilled) sfxCork();
       if (isGameWon()) {
         sync();
@@ -2311,20 +2608,25 @@ const GAME_HTML = `<!DOCTYPE html>
       }
       sync();
       if (added) { toast('No moves left, added an extra bottle!'); sfxDrop(420, 0.06) }
-      else if (shapeJustFilled) { toast(shapeState.name + ' filled! Now complete the bottles.'); }
+      else if (shapeJustFilled) {
+        const rem = shapes.find(s => s.units < s.cap);
+        if (rem) toast(shState.name + ' full! Now fill ' + rem.name + '!');
+      }
       if (!hasMove()) toast('No moves left. Undo or restart level.');
     }
 
     async function pour(a, b) {
       busy = true;
-      hist.push({ B: JSON.parse(JSON.stringify(B)), cov: cov.slice(), shapeUnits: shapeState ? shapeState.units : 0 });
+      hist.push({ B: JSON.parse(JSON.stringify(B)), cov: cov.slice(), shapeUnits: shapes.map(s => s.units) });
       const ea = els[a], eb = els[b], ra = ea.getBoundingClientRect(), rb = eb.getBoundingClientRect();
-      const h = rb.height, bcx = rb.left + rb.width / 2, side = bcx - .5 * h > 8 ? -1 : 1;
+      const h = rb.height, wd = rb.width, bcx = rb.left + wd / 2;
+      const side = (bcx - h - wd * 0.35 < 8) ? 1 : (bcx + h + wd * 0.35 > window.innerWidth - 8 ? -1 : (bcx >= window.innerWidth * 0.5 ? -1 : 1));
       const c = B[a][B[a].length - 1].c, color = COL[c];
       const capB = CAP;
       let n = 0; while (n < B[a].length && B[a][B[a].length - 1 - n].c === c && !B[a][B[a].length - 1 - n].h && B[b].length + n < capB) n++;
-      const acx = ra.left + ra.width / 2, acy = ra.top + ra.height / 2 + 16, wd = rb.width, R = t => t * Math.PI / 180;
-      const myf = t => rb.top - 24 - h * Math.cos(R(t)) - (wd / 2) * Math.sin(R(t)), py = t => myf(t) + .5 * h * Math.cos(R(t)) - acy;
+      const acx = ra.left + ra.width / 2, acy = ra.top + ra.height / 2 + 16, R = t => t * Math.PI / 180;
+      const liftGap = rb.top < 175 ? 12 : 24;
+      const myf = t => rb.top - liftGap - h * Math.cos(R(t)) - (wd / 2) * Math.sin(R(t)), py = t => myf(t) + .5 * h * Math.cos(R(t)) - acy;
       const pose = t => \`translate(\${bcx + side * .5 * h * Math.sin(R(t)) - acx}px,\${py(t)}px) rotate(\${-side * t}deg)\`;
       const mv = 750 * SP, pd = (950 + n * 300) * SP, rt = 650 * SP, T = mv + pd + rt, E = 'cubic-bezier(.45,0,.2,1)';
       sel = null; ea.classList.remove('sel'); ea.style.transition = 'none'; ea.style.zIndex = 20;
@@ -2332,7 +2634,8 @@ const GAME_HTML = `<!DOCTYPE html>
       const surf = rb.bottom - 4 - ((B[b].length + n / 2) / capB) * (h - 8), m0 = myf(52), m1 = myf(88);
       st.style.cssText = \`background:\${color};left:\${bcx - 3.5}px;top:\${m0}px;height:\${Math.max(8, surf - m0)}px\`;
       document.documentElement.style.setProperty('--d', (pd * .8) + 'ms');
-      const wy = Math.min(py(52), -(h * .9 + 14));
+      const ceilWy = Math.min(py(52), 92 - ra.top);
+      const wy = Math.max(ceilWy, Math.min(py(52), -(h * .9 + 14)));
       ea.animate([{ transform: 'translateY(-16px)', easing: E }, { transform: \`translate(0px,\${wy}px)\`, offset: .45 * mv / T, easing: E }, { transform: pose(52), offset: mv / T, easing: 'linear' }, { transform: pose(70), offset: (mv + pd * .45) / T, easing: 'linear' }, { transform: pose(88), offset: (mv + pd) / T, easing: E }, { transform: \`translate(0px,\${wy}px)\`, offset: (mv + pd + rt * .5) / T, easing: E }, { transform: 'none' }], { duration: T });
       await sleep(mv - 60);
       st.style.display = 'block';
@@ -2364,8 +2667,9 @@ const GAME_HTML = `<!DOCTYPE html>
       sync();
       if (added) { toast('No moves left, added an extra bottle!'); sfxDrop(420, 0.06) }
       else if (opened) { toast('Bottle unlocked'); sfxDrop(680, 0.06) }
-      else if (shapeState && solved(B) && shapeState.units < shapeState.cap) {
-        toast('Now pour the matching color into the ' + shapeState.name + '!');
+      else if (shapes.length && solved(B) && !isGameWon()) {
+        const rem = shapes.filter(s => s.units < s.cap).map(s => s.name);
+        toast('Now pour the matching ' + (rem.length > 1 ? 'colors into both shapes!' : ('color into the ' + (rem[0] || 'shape') + '!')));
       }
       if (!hasMove()) toast('No moves left. Undo or restart level.');
     }
@@ -2373,7 +2677,9 @@ const GAME_HTML = `<!DOCTYPE html>
     function undo() {
       if (busy || !hist.length || !undos) return;
       const h = hist.pop(); B = h.B; cov = h.cov;
-      if (shapeState && h.shapeUnits !== undefined) shapeState.units = h.shapeUnits;
+      if (shapes.length && Array.isArray(h.shapeUnits)) {
+        shapes.forEach((s, i) => { if (h.shapeUnits[i] !== undefined) s.units = h.shapeUnits[i]; });
+      }
       undos--; sel = null;
       sfxTap(520);
       render();
@@ -2410,16 +2716,17 @@ const GAME_HTML = `<!DOCTYPE html>
       if ($('win-lvl-text')) $('win-lvl-text').textContent = 'Level ' + winLevel + ' Cleared!';
       if ($('win-moves')) $('win-moves').textContent = hist.length;
       const nextLv = winLevel + 1;
-      const nextSh = resolveShapeForLevel(nextLv, winMode);
-      if (shapeState) {
-        if ($('win-stat-2-lbl')) $('win-stat-2-lbl').textContent = 'Shape';
-        if ($('win-bottles')) $('win-bottles').textContent = shapeState.name;
-        $('wm').textContent = nextSh ? ('Next: Fill ' + nextSh.name + ' on Level ' + nextLv) : ('Next: Normal Bottle Sort on Level ' + nextLv);
+      const nextDefs = resolveShapesForLevel(nextLv, winMode);
+      const nextDesc = nextDefs.length > 1 ? ('Fill Both Shapes (' + nextDefs.map(d => d.name).join(' + ') + ')') : (nextDefs[0] ? ('Fill ' + nextDefs[0].name) : 'Normal Bottle Sort');
+      if (shapes.length) {
+        if ($('win-stat-2-lbl')) $('win-stat-2-lbl').textContent = shapes.length > 1 ? 'Shapes' : 'Shape';
+        if ($('win-bottles')) $('win-bottles').textContent = shapes.length > 1 ? (shapes.length + ' Done') : shapes[0].name;
+        $('wm').textContent = 'Next: ' + nextDesc + ' on Level ' + nextLv;
       } else {
         if ($('win-stat-2-lbl')) $('win-stat-2-lbl').textContent = 'Bottles';
         if ($('win-bottles')) $('win-bottles').textContent = params(winLevel).colors;
-        if (nextSh) {
-          $('wm').textContent = 'Next: Fill ' + nextSh.name + ' on Level ' + nextLv;
+        if (nextDefs.length) {
+          $('wm').textContent = 'Next: ' + nextDesc + ' on Level ' + nextLv;
         } else {
           $('wm').textContent = label(nextLv) == label(winLevel) ? 'Level ' + nextLv + ' is waiting for you' : 'Unlocking ' + label(nextLv).toLowerCase() + ' mode on Level ' + nextLv;
         }
@@ -2440,7 +2747,7 @@ const GAME_HTML = `<!DOCTYPE html>
     $('win-replay').onclick = () => { $('win').classList.remove('on'); setLv(Math.max(1, curLv() - 1)); build() };
     $('un').onclick = undo; $('ab').onclick = addBottle;
     window.addEventListener('resize', () => { if (!busy) render() });
-    let SP = 1.42, auto = false, running = false, winShownAt = 0;
+    let SP = 1.42 / gameSpeed, auto = false, running = false, winShownAt = 0;
     function solve(b0, cv0) {
       const st0 = b0.map(x => x.map(u => u.c + (u.h ? 64 : 0))), anyC = cv0.some(Boolean), cs = v => v.map(q => q ? 1 : 0).join('');
       const k = (s, v) => (anyC ? s.map(x => x.join(',')) : s.map(x => x.join(',')).sort()).join('|') + '#' + cs(v);
@@ -2480,7 +2787,7 @@ const GAME_HTML = `<!DOCTYPE html>
       if (running) return; running = true;
       const rand = (lo, hi) => lo + Math.random() * (hi - lo);
       async function humanWait(ms, curM, curLVal) {
-        const end = performance.now() + ms;
+        const end = performance.now() + Math.max(16, ms / gameSpeed);
         while (performance.now() < end) {
           if (!auto || mode !== curM || curLv() !== curLVal || isGameWon()) return false;
           await sleep(Math.min(50, Math.max(10, end - performance.now())));
@@ -2503,7 +2810,7 @@ const GAME_HTML = `<!DOCTYPE html>
             continue;
           }
           if (isGameWon() || busy) { await sleep(100); continue }
-          const path = shapeState ? solveShape(B, shapeState) : solve(B, cov);
+          const path = shapes.length ? solveShapes(B, shapes) : solve(B, cov);
           if (!path) {
             if (adds) { addBottle(); await sleep(550); continue }
             toast('Auto could not solve this one, skipping'); advanceLv(); build(); await sleep(700); continue;
@@ -2539,21 +2846,22 @@ const GAME_HTML = `<!DOCTYPE html>
 
             // Step 1: Tap source bottle and wait for full lift + natural aim pause
             sel = a; sfxTap(640); sync();
-            const aimMs = b === 'shape' ? rand(420, 620) : rand(460, 720);
+            const isShMove = typeof b === 'string' && b.startsWith('shape');
+            const aimMs = isShMove ? rand(420, 620) : rand(460, 720);
             if (!(await humanWait(aimMs, curM, curLVal))) {
               if (!auto && !busy) { sel = null; sync(); }
               break;
             }
 
             // Step 2: Execute pour onto destination bottle or Shape
-            if (b === 'shape') pourToShape(a);
+            if (isShMove) pourToShape(a, Number(b.split(':')[1] || 0));
             else pour(a, b);
             while (busy && !isGameWon() && !$('win').classList.contains('on')) await sleep(40);
             moveCount++;
 
             if (!auto || mode !== curM || curLv() !== curLVal || isGameWon() || $('win').classList.contains('on')) break;
             // Variable human thinking delay instead of uniform 80ms
-            const packed = b !== 'shape' && B[b] && full(B[b]);
+            const packed = !isShMove && B[b] && full(B[b]);
             let thinkMs;
             if (packed || moveCount >= nextScanAt) {
               nextScanAt = moveCount + Math.floor(rand(4, 8));
@@ -2572,9 +2880,11 @@ const GAME_HTML = `<!DOCTYPE html>
       } finally { running = false }
     }
     $('au').onclick = function () {
-      auto = !auto; this.classList.toggle('on', auto); SP = auto ? 1.15 : 1.42;
+      startBgm();
+      auto = !auto; this.classList.toggle('on', auto); SP = (auto ? 1.15 : 1.42) / gameSpeed;
       if (auto) { sel = null; sync(); run() }
     };
+    if ($('bm')) $('bm').onclick = toggleBgm;
     let lvinEdited = false;
     $('lvin').oninput = () => { lvinEdited = true; };
     function selectMode(nextMode) {
@@ -2726,21 +3036,28 @@ const GAME_HTML = `<!DOCTYPE html>
       if ($('garden-bot')) $('garden-bot').innerHTML = buildGardenSvg(true, vbW);
     }
     function openStart() {
-      auto = false; $('au').classList.remove('on'); SP = 1.42;
+      auto = false; $('au').classList.remove('on'); applySpeed(gameSpeed, false);
       lvinEdited = false;
       selectMode(mode);
       selectTheme(theme);
+      if ($('spin')) $('spin').value = gameSpeed;
       $('st').classList.remove('off');
       setTimeout(() => { $('lvin').focus(); $('lvin').select() }, 50);
     }
     function startGame() {
       const v = Math.floor(Number($('lvin').value));
       setLv(v);
+      if ($('spin')) applySpeed($('spin').value);
       $('st').classList.add('off'); $('win').classList.remove('on');
+      startBgm();
       build();
     }
     $('play').onclick = startGame;
     $('lvin').onkeydown = e => { if (e.key === 'Enter') startGame() };
+    if ($('spin')) {
+      $('spin').onkeydown = e => { if (e.key === 'Enter') startGame() };
+      $('spin').onchange = () => { const raw = Number($('spin').value); if (Number.isFinite(raw) && raw > 0) applySpeed(raw); };
+    }
     $('lv').parentNode.onclick = openStart;
     // Animated Background: Rising 3D Liquid Bubbles (Optimized Sprite Blitting for Mobile 60 FPS)
     (function initBgAnimation() {
@@ -3081,6 +3398,8 @@ const GAME_HTML = `<!DOCTYPE html>
       requestAnimationFrame(loop);
     })();
     initGardenBorders();
+    applySpeed(gameSpeed, false);
+    syncBgmBtn();
     selectTheme(theme);
     build();
     openStart();
